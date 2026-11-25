@@ -73,13 +73,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # The Visual Studio Marketplace takes this job's GitHub identity
+      # (Trusted Publishing), so it needs no stored token.
+      id-token: write
     concurrency: release-${{ github.ref }}
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      # Tokens for the Visual Studio Marketplace (publisher urdr-db) and
-      # Open VSX. Without one, that step is skipped.
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      # The Open VSX token. Without it, that step is skipped.
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
@@ -102,9 +103,13 @@ jobs:
             --title "Urðr-XML $version" --generate-notes $flags
       # The Marketplaces take only plain versions, so a pre-release
       # (v0.4.0-beta.1) stays on GitHub.
+      #
+      # This step runs once the publisher urdr-db has a Trusted Publishing policy
+      # for this repository and ci.yml, and the repository variable
+      # MARKETPLACE_PUBLISH is "true".
       - name: Publish to the Visual Studio Marketplace
-        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && env.VSCE_PAT != ''
-        run: npx --yes @vscode/vsce@3 publish --packagePath "urdr-xml-${GITHUB_REF_NAME#v}.vsix"
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && vars.MARKETPLACE_PUBLISH == 'true'
+        run: npx --yes @vscode/vsce publish --oidc --packagePath "urdr-xml-${GITHUB_REF_NAME#v}.vsix"
       - name: Publish to Open VSX
         if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && env.OVSX_PAT != ''
         run: npx --yes ovsx publish "urdr-xml-${GITHUB_REF_NAME#v}.vsix" -p "$OVSX_PAT"
