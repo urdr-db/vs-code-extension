@@ -1,7 +1,5 @@
 ![Urðr-XML: TEI, XSLT and XQuery checking for VS Code](extension/images/splash.png)
 
-# Urðr-XML
-
 Urðr-XML checks TEI and other XML documents against their schemas as you
 type, and checks XSLT, XQuery and XPath. It runs and previews XSLT
 transformations, and it reads TEI ODD files as schemas.
