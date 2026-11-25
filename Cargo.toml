@@ -15,6 +15,9 @@ publish = false
 # changes the extension needs, a commit on main. Move every line together.
 [workspace.dependencies]
 urdr-validate-wasm = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
+urdr-xdm = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
+urdr-xml-parse = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
+urdr-xml-validate = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
 urdr-xq-analyze = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
 urdr-xq-syntax = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
 urdr-xslt = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }

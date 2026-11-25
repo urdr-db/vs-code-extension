@@ -1,6 +1,10 @@
 // The language server: checks open documents with the Rust core and
 // publishes what it finds as diagnostics.
 import {
+  CompletionItemKind,
+  InsertTextFormat,
+  MarkupKind,
+  type CompletionItem,
   createConnection,
   Diagnostic,
   DiagnosticSeverity,
@@ -9,7 +13,10 @@ import {
   TextDocumentSyncKind,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { check, validate, type Kind } from "./core.ts";
+import { check, outline, validate, type Kind } from "./core.ts";
+import { readDocs } from "./docs.ts";
+import { schemaHints } from "./hints.ts";
+import { hover, Index, suggest } from "./suggest.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { makeReader, type Settings } from "./reader.ts";
@@ -22,7 +29,13 @@ let settings: Settings = { validation: true, fetchRemote: true, delay: 400, cach
 connection.onInitialize((params) => {
   const options = (params.initializationOptions ?? {}) as Partial<Settings>;
   settings = { ...settings, ...options };
-  return { capabilities: { textDocumentSync: TextDocumentSyncKind.Incremental } };
+  return {
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Incremental,
+      completionProvider: { triggerCharacters: ["<", "/", " ", '"', "'", ":"] },
+      hoverProvider: true,
+    },
+  };
 });
 
 connection.onDidChangeConfiguration((change) => {
@@ -156,6 +169,72 @@ async function xmlDiagnostics(uri: string, text: string, read: ReturnType<typeof
 function languageName(language: string): string {
   return ({ "relax-ng": "RELAX NG", xsd: "XSD", schematron: "Schematron", dtd: "DTD" } as Record<string, string>)[language] ?? language;
 }
+
+// Suggestions and hovers: an index of the schema each XML document
+// names, kept while the names stay the same.
+const indexes = new Map<string, Promise<Index | undefined>>();
+
+function indexFor(doc: TextDocument): Promise<Index | undefined> {
+  const hints = schemaHints(doc.getText(), (ref) => new URL(ref, doc.uri).href);
+  if (!hints.length) return Promise.resolve(undefined);
+  const key = JSON.stringify(hints);
+  let p = indexes.get(key);
+  if (!p) {
+    const read = makeReader(settings, (uri) => documents.get(uri)?.getText());
+    p = outline(hints, read).then(({ answer, files }) => {
+      if (!answer.outline) {
+        // Nothing to suggest from yet (a schema not readable): try again
+        // next time rather than keep the miss.
+        indexes.delete(key);
+        return undefined;
+      }
+      return new Index(answer.outline, readDocs(Object.values(files)));
+    });
+    p.catch(() => indexes.delete(key));
+    indexes.set(key, p);
+  }
+  return p;
+}
+
+const KINDS = {
+  element: CompletionItemKind.Class,
+  close: CompletionItemKind.Class,
+  attribute: CompletionItemKind.Property,
+  value: CompletionItemKind.Value,
+} as const;
+
+connection.onCompletion(async (params): Promise<CompletionItem[]> => {
+  const doc = documents.get(params.textDocument.uri);
+  if (!doc || kindOf(doc) !== "xml") return [];
+  const index = await indexFor(doc).catch(() => undefined);
+  if (!index) return [];
+  const text = doc.getText();
+  const offset = doc.offsetAt(params.position);
+  return suggest(text, offset, index).map((s, i) => ({
+    label: s.label,
+    kind: KINDS[s.kind],
+    detail: s.detail,
+    documentation: s.documentation ? { kind: MarkupKind.Markdown, value: s.documentation } : undefined,
+    // Required attributes first, then the schema's order.
+    sortText: `${s.required ? "0" : "1"}${String(i).padStart(5, "0")}`,
+    insertTextFormat: InsertTextFormat.Snippet,
+    textEdit: { range: { start: doc.positionAt(s.start), end: params.position }, newText: s.insert },
+    command: s.retrigger ? { title: "Suggest values", command: "editor.action.triggerSuggest" } : undefined,
+  }));
+});
+
+connection.onHover(async (params) => {
+  const doc = documents.get(params.textDocument.uri);
+  if (!doc || kindOf(doc) !== "xml") return null;
+  const index = await indexFor(doc).catch(() => undefined);
+  if (!index) return null;
+  const h = hover(doc.getText(), doc.offsetAt(params.position), index);
+  if (!h) return null;
+  return {
+    contents: { kind: MarkupKind.Markdown, value: h.markdown },
+    range: { start: doc.positionAt(h.start), end: doc.positionAt(h.end) },
+  };
+});
 
 documents.onDidOpen((e) => schedule(e.document, 0));
 documents.onDidChangeContent((e) => schedule(e.document));
