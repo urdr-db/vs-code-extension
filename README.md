@@ -18,11 +18,45 @@ the extension as WebAssembly.
 | Check XQuery 3.1 modules, with the library modules they import | ✓ |
 | Suggestions from the schema while typing: child elements (with their required attributes), attributes, values, closing tags | ✓ |
 | Hovers with the schema's documentation (such as TEI's), attributes and allowed content | ✓ |
+| Run an XSLT 3.0 transformation on a document (**Transform with XSLT…**), with transforms saved in the workspace settings | ✓ |
+| Live preview of a transformation to the side, as for Markdown, updated as you type | ✓ |
 | TEI ODD files as schemas (compiled with the TEI stylesheets on Urðr's XSLT engine) | planned |
-| Run an XSLT transformation, saved transforms, live preview to the side | planned |
 
 A file passes or fails the same way here as in Urðr and in Urðr Studio:
 all three run the same validators.
+
+## Transforming with XSLT
+
+- **Urðr-XML: Transform with XSLT…** (in the Command Palette, and on the
+  right-click menu of XML and XSLT files) runs a stylesheet on the
+  current document, or on a document you choose when a stylesheet is
+  open. The result opens beside the document, or is written to a file.
+- **Urðr-XML: Open XSLT Preview to the Side** (the preview button at the
+  top right of the editor) shows the result beside the document and runs
+  it again as you type in the document or the stylesheet. HTML is shown
+  as a page; other results as text. Scripts in the result never run.
+
+The stylesheet is the one a saved transform names for the document, else
+the document's own `<?xml-stylesheet type="text/xsl" href="…"?>`, else
+the extension asks. Transforms are saved in `.vscode/settings.json`:
+
+```jsonc
+"urdr.transforms": [
+  {
+    "name": "Letters to HTML",
+    "stylesheet": "xslt/letters-to-html.xsl",
+    "source": "letters/*.xml",                         // which documents it is for
+    "output": "html/${fileBasenameNoExtension}.html",  // leave out to open the result in an editor
+    "parameters": { "title": "Letters" }
+  }
+]
+```
+
+`xsl:include`, `xsl:import`, `doc()` and `unparsed-text()` read files
+from open editors and the disk; `xsl:result-document` writes next to the
+output. `xsl:message` texts go to the **Urðr-XML: XSLT** output panel. A
+transformation that runs longer than `urdr.transform.timeout` seconds
+(60) is stopped.
 
 ## Trying it
 

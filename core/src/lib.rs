@@ -23,6 +23,7 @@ use urdr_xq_syntax::{Language, Version};
 
 pub mod bindings;
 pub mod outline;
+pub mod transform;
 
 /// One problem to show in the editor. Offsets are UTF-8 byte offsets in
 /// the checked text; line and column count from 1, 0 when unknown.

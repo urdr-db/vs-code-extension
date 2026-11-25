@@ -20,11 +20,12 @@ import { hover, Index, suggest } from "./suggest.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { makeReader, type Settings } from "./reader.ts";
+import { Transformer, type TransformParams } from "./transforms.ts";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
-let settings: Settings = { validation: true, fetchRemote: true, delay: 400, cacheDir: undefined };
+let settings: Settings = { validation: true, fetchRemote: true, delay: 400, cacheDir: undefined, transformTimeout: 60 };
 
 connection.onInitialize((params) => {
   const options = (params.initializationOptions ?? {}) as Partial<Settings>;
@@ -47,6 +48,7 @@ connection.onDidChangeConfiguration((change) => {
       validation: v?.enabled ?? settings.validation,
       fetchRemote: v?.fetchRemoteSchemas ?? settings.fetchRemote,
       delay: (u["checkDelay"] as number | undefined) ?? settings.delay,
+      transformTimeout: (u["transform"] as { timeout?: number } | undefined)?.timeout ?? settings.transformTimeout,
     };
   }
   documents.all().forEach((d) => schedule(d, 0));
@@ -235,6 +237,18 @@ connection.onHover(async (params) => {
     range: { start: doc.positionAt(h.start), end: doc.positionAt(h.end) },
   };
 });
+
+// XSLT transformations, for the "Transform with XSLT" command and the
+// preview. The worker sits next to the bundled server.
+const transformer = new Transformer(`${__dirname}/transformer.js`);
+connection.onRequest("urdr/transform", (params: TransformParams) =>
+  transformer.transform(
+    params,
+    makeReader(settings, (uri) => documents.get(uri)?.getText()),
+    settings.transformTimeout * 1000,
+  ),
+);
+connection.onShutdown(() => transformer.stop());
 
 documents.onDidOpen((e) => schedule(e.document, 0));
 documents.onDidChangeContent((e) => schedule(e.document));

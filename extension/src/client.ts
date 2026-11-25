@@ -1,10 +1,12 @@
 // The extension: starts the language server and passes it the settings.
 import * as vscode from "vscode";
+import { register } from "./commands.ts";
 import { LanguageClient, TransportKind, type LanguageClientOptions, type ServerOptions } from "vscode-languageclient/node";
 
 let client: LanguageClient | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  register(context, () => client);
   const module = context.asAbsolutePath("out/server.js");
   const server: ServerOptions = {
     run: { module, transport: TransportKind.ipc },
@@ -23,6 +25,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       fetchRemote: config.get<boolean>("validation.fetchRemoteSchemas", true),
       delay: config.get<number>("checkDelay", 400),
       cacheDir: vscode.Uri.joinPath(context.globalStorageUri, "schemas").fsPath,
+      transformTimeout: config.get<number>("transform.timeout", 60),
     },
   };
   client = new LanguageClient("urdr", "Urðr-XML", server, options);

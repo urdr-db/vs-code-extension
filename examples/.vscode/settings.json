@@ -1,0 +1,19 @@
+{
+  // Saved XSLT transforms, for "Urðr-XML: Transform with XSLT…" and the
+  // preview. tei/letter.xml needs none: it names its stylesheet itself.
+  "urdr.transforms": [
+    {
+      "name": "Letters to HTML",
+      "stylesheet": "xslt/letters-to-html.xsl",
+      "source": "schemas/letters-*.xml",
+      "output": "out/${fileBasenameNoExtension}.html"
+    },
+    {
+      "name": "Letter pages (no source document)",
+      "stylesheet": "xslt/letter-pages.xsl",
+      "initialTemplate": "main",
+      "parameters": { "title": "Dorothy's letters" },
+      "output": "out/index.html"
+    }
+  ]
+}

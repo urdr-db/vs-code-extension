@@ -67,3 +67,10 @@ pub fn schema_outline(request: &str) -> String {
         }),
     }
 }
+
+/// Runs an XSLT transformation.
+#[wasm_bindgen(js_name = transformXslt)]
+#[must_use]
+pub fn transform_xslt(request: &str) -> String {
+    crate::transform::transform_json(request)
+}

@@ -5,3 +5,4 @@ node_modules/
 *.vsix
 /extension/media/
 /extension/README.md
+/examples/out/
