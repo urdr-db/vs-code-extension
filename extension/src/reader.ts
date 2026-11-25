@@ -12,6 +12,8 @@ export interface Settings {
   delay: number;
   /** Where downloads are kept; `undefined` keeps them in memory only. */
   cacheDir: string | undefined;
+  /** Seconds a transformation may take. */
+  transformTimeout: number;
 }
 
 const memory = new Map<string, Promise<string | undefined>>();
