@@ -685,7 +685,7 @@ checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
 [[package]]
 name = "urdr-collation"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "icu_casemap",
  "icu_collator",
@@ -697,7 +697,7 @@ dependencies = [
 [[package]]
 name = "urdr-fulltext-core"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "foldhash",
  "rust-stemmers",
@@ -709,7 +709,7 @@ dependencies = [
 [[package]]
 name = "urdr-validate-wasm"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "serde_json",
  "urdr-xdm",
@@ -740,7 +740,7 @@ dependencies = [
 [[package]]
 name = "urdr-xdm"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "indexmap",
  "num-bigint",
@@ -751,7 +751,7 @@ dependencies = [
 [[package]]
 name = "urdr-xml-parse"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "encoding_rs",
  "quick-xml",
@@ -761,7 +761,7 @@ dependencies = [
 [[package]]
 name = "urdr-xml-serialize"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "encoding_rs",
  "icu_normalizer",
@@ -773,7 +773,7 @@ dependencies = [
 [[package]]
 name = "urdr-xml-validate"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "urdr-xdm",
  "urdr-xml-parse",
@@ -784,7 +784,7 @@ dependencies = [
 [[package]]
 name = "urdr-xq-analyze"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "urdr-xml-validate",
  "urdr-xq-functions",
@@ -794,7 +794,7 @@ dependencies = [
 [[package]]
 name = "urdr-xq-exec"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "urdr-collation",
  "urdr-fulltext-core",
@@ -812,7 +812,7 @@ dependencies = [
 [[package]]
 name = "urdr-xq-functions"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "jiff",
  "num-bigint",
@@ -830,7 +830,7 @@ dependencies = [
 [[package]]
 name = "urdr-xq-plan"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "urdr-collation",
  "urdr-xdm",
@@ -843,12 +843,12 @@ dependencies = [
 [[package]]
 name = "urdr-xq-syntax"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 
 [[package]]
 name = "urdr-xq-update"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "urdr-xdm",
  "urdr-xml-parse",
@@ -857,7 +857,7 @@ dependencies = [
 [[package]]
 name = "urdr-xsd-regex"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "fancy-regex",
  "regex",
@@ -867,7 +867,7 @@ dependencies = [
 [[package]]
 name = "urdr-xsd-types"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "num-bigint",
  "num-traits",
@@ -878,7 +878,7 @@ dependencies = [
 [[package]]
 name = "urdr-xslt"
 version = "0.4.0"
-source = "git+https://github.com/silencesys/dh--urdr?rev=f6c67f5d261039fce83251cfb1d2495b20da7afa#f6c67f5d261039fce83251cfb1d2495b20da7afa"
+source = "git+https://github.com/silencesys/dh--urdr?rev=541b3c96d19a208f0b94fa2a2ae66315d7a01611#541b3c96d19a208f0b94fa2a2ae66315d7a01611"
 dependencies = [
  "sha2",
  "urdr-xdm",
