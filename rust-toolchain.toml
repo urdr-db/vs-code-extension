@@ -1,0 +1,8 @@
+# The Rust release that builds, tests and lints Urðr, pinned so that a new
+# Rust release cannot turn CI red by itself (decision `rust-toolchain-pin`).
+# Move it with `python3 scripts/rust-toolchain.py bump <version>`, which also
+# updates the workflows. The oldest Rust that builds Urðr is `rust-version`
+# in Cargo.toml.
+[toolchain]
+channel = "1.100.0"
+components = ["rustfmt", "clippy"]

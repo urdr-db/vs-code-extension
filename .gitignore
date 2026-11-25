@@ -1,0 +1,5 @@
+/target
+node_modules/
+/extension/out/
+/extension/wasm/
+*.vsix
