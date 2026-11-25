@@ -4,13 +4,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { load, outline } from "../src/core.ts";
+import { outline } from "../src/core.ts";
+import { loadFrom } from "../src/node.ts";
 import { contextAt } from "../src/context.ts";
 import { readDocs } from "../src/docs.ts";
 import { schemaHints } from "../src/hints.ts";
 import { hover, Index, suggest } from "../src/suggest.ts";
 
-load(join(dirname(fileURLToPath(import.meta.url)), "..", "wasm"));
+loadFrom(join(dirname(fileURLToPath(import.meta.url)), "..", "wasm"));
 
 const TEI = "http://www.tei-c.org/ns/1.0";
 const RNG = `<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" ns="${TEI}">
