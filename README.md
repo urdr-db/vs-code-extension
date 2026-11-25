@@ -1,4 +1,4 @@
-# Urðr XML for VS Code
+# Urðr-XML for VS Code
 
 A VS Code extension for digital humanities work with XML: it checks TEI
 and other XML documents against their schemas, and checks XSLT, XQuery
@@ -20,6 +20,12 @@ the extension as WebAssembly.
 
 A file passes or fails the same way here as in Urðr and in Urðr Studio:
 all three run the same validators.
+
+## Trying it
+
+Install a build (`urdr-xml-<version>.vsix`) with **Extensions → … →
+Install from VSIX…**, then open the [`examples`](examples) folder. Its
+README lists what each file should show.
 
 ## How it is built
 

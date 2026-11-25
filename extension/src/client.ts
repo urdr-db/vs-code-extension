@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       cacheDir: vscode.Uri.joinPath(context.globalStorageUri, "schemas").fsPath,
     },
   };
-  client = new LanguageClient("urdr", "Urðr XML", server, options);
+  client = new LanguageClient("urdr", "Urðr-XML", server, options);
   await client.start();
 }
 
