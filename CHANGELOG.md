@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Releases no longer include `urdr-xml-examples.zip`.
+
 ## 0.5.1
 
 - Typing "urdr" in the Command Palette finds the Urðr-XML commands.

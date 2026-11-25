@@ -3,10 +3,10 @@
 ## Layout
 
 ```
-extension/   the VS Code extension (TypeScript): client and language server
+extension/   the VS Code extension (TypeScript): client and language server,
+             with its tests and their documents in extension/test/fixtures
 core/        the Rust crate the language server runs, compiled to WebAssembly
 docs/        how it works, starting with docs/architecture.md
-examples/    a document for each feature, used by the tests
 ```
 
 ## Building
@@ -48,7 +48,7 @@ git push origin v0.4.0
 ```
 
 CI builds and tests the tag, checks that it matches the version, and
-publishes `urdr-xml-0.4.0.vsix` and the examples on the Releases page.
+publishes `urdr-xml-0.4.0.vsix` on the Releases page.
 A version with a hyphen (`v0.4.0-beta.1`) is a pre-release on GitHub
 only; other versions also go to:
 

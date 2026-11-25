@@ -55,14 +55,10 @@ jobs:
       - name: Package
         working-directory: extension
         run: npx vsce package --no-dependencies -o urdr-xml.vsix
-      - name: Examples
-        run: zip -qr extension/urdr-xml-examples.zip examples -x 'examples/out/*'
       - uses: actions/upload-artifact@v4
         with:
           name: urdr-xml-vsix
-          path: |
-            extension/urdr-xml.vsix
-            extension/urdr-xml-examples.zip
+          path: extension/urdr-xml.vsix
 
   # Publishes the build on the repository's Releases page: a version tag
   # (v0.3.0) makes a release of that version; every push to main
@@ -101,9 +97,9 @@ jobs:
           case "$version" in *-*) flags="--prerelease" ;; esac
           # A re-run (after a failed Marketplace step) keeps the release.
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip --clobber
+            gh release upload "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip \
+            gh release create "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" \
               --title "Urðr-XML $version" --generate-notes $flags
           fi
       # The Marketplaces take only plain versions, so a pre-release
@@ -125,6 +121,6 @@ jobs:
           short="${GITHUB_SHA::7}"
           mv urdr-xml.vsix "urdr-xml-$version-dev.$short.vsix"
           gh release delete dev --cleanup-tag --yes || true
-          gh release create dev "urdr-xml-$version-dev.$short.vsix" urdr-xml-examples.zip \
+          gh release create dev "urdr-xml-$version-dev.$short.vsix" \
             --target "$GITHUB_SHA" --prerelease --title "Development build ($short)" \
             --notes "The newest build of main ($GITHUB_SHA). Install the .vsix with Extensions → … → Install from VSIX. Not a release: it changes with every merge."

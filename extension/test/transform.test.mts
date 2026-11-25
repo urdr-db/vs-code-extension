@@ -11,7 +11,7 @@ import { threads } from "../src/node.ts";
 import { Transformer } from "../src/transforms.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const examples = join(here, "..", "..", "examples");
+const examples = join(here, "fixtures");
 const uri = (path: string) => pathToFileURL(join(examples, path)).href;
 const disk = (u: string) => readFile(fileURLToPath(u), "utf8").catch(() => undefined);
 const worker = () => new Transformer(threads(join(here, "..", "out", "transformer.js")));
