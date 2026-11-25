@@ -43,12 +43,12 @@ to `CHANGELOG.md` (the Marketplace shows it). Merge that, then tag the
 commit and push the tag:
 
 ```sh
-git tag v0.3.1
-git push origin v0.3.1
+git tag v0.4.0
+git push origin v0.4.0
 ```
 
 CI builds and tests the tag, checks that it matches the version, and
-publishes `urdr-xml-0.3.1.vsix` and the examples on the Releases page.
+publishes `urdr-xml-0.4.0.vsix` and the examples on the Releases page.
 A version with a hyphen (`v0.4.0-beta.1`) is a pre-release on GitHub
 only; other versions also go to:
 
