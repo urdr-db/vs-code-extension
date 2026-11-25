@@ -99,49 +99,49 @@
     "commands": [
       {
         "command": "urdr.surroundWithTags",
-        "title": "Surround with Tags…",
-        "category": "Urðr-XML"
+        "title": { "value": "Surround with Tags…", "original": "Surround with Tags…" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.surroundWithLastTag",
-        "title": "Surround with the Last Tag",
-        "category": "Urðr-XML"
+        "title": { "value": "Surround with the Last Tag", "original": "Surround with the Last Tag" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.deleteElementTags",
-        "title": "Delete Element Tags",
-        "category": "Urðr-XML"
+        "title": { "value": "Delete Element Tags", "original": "Delete Element Tags" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.splitElement",
-        "title": "Split Element",
-        "category": "Urðr-XML"
+        "title": { "value": "Split Element", "original": "Split Element" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.joinElements",
-        "title": "Join Elements",
-        "category": "Urðr-XML"
+        "title": { "value": "Join Elements", "original": "Join Elements" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.renameElement",
-        "title": "Rename Element",
-        "category": "Urðr-XML"
+        "title": { "value": "Rename Element", "original": "Rename Element" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.transform",
-        "title": "Transform with XSLT…",
-        "category": "Urðr-XML",
+        "title": { "value": "Transform with XSLT…", "original": "Transform with XSLT…" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" },
         "icon": "$(run)"
       },
       {
         "command": "urdr.compileOdd",
-        "title": "Compile ODD to RELAX NG",
-        "category": "Urðr-XML"
+        "title": { "value": "Compile ODD to RELAX NG", "original": "Compile ODD to RELAX NG" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
         "command": "urdr.preview",
-        "title": "Open XSLT Preview to the Side",
-        "category": "Urðr-XML",
+        "title": { "value": "Open XSLT Preview to the Side", "original": "Open XSLT Preview to the Side" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" },
         "icon": "$(open-preview)"
       }
     ],
