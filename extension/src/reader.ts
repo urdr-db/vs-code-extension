@@ -14,6 +14,8 @@ export interface Settings {
   cacheDir: string | undefined;
   /** Seconds a transformation may take. */
   transformTimeout: number;
+  /** The TEI source ODDs compile against; empty for the one that ships. */
+  oddSource: string;
 }
 
 const memory = new Map<string, Promise<string | undefined>>();

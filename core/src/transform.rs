@@ -456,6 +456,9 @@ fn run(
             messages: Some(Arc::clone(&sink)),
             current_datetime,
             base_output_uri: request.output.clone(),
+            // Deep enough for the TEI stylesheets, and short of where the
+            // 64 MiB stack (.cargo/config.toml) runs out.
+            max_call_depth: Some(3_000),
             ..TransformOptions::default()
         },
     );

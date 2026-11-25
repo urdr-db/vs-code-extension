@@ -21,11 +21,14 @@ import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { makeReader, type Settings } from "./reader.ts";
 import { Transformer, type TransformParams } from "./transforms.ts";
+import { ODD_RNG, OddCompiler, oddReader, rewriteOddModels } from "./odd.ts";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
-let settings: Settings = { validation: true, fetchRemote: true, delay: 400, cacheDir: undefined, transformTimeout: 60 };
+let settings: Settings = { validation: true, fetchRemote: true, delay: 400, cacheDir: undefined, transformTimeout: 60, oddSource: "" };
 
 connection.onInitialize((params) => {
   const options = (params.initializationOptions ?? {}) as Partial<Settings>;
@@ -49,6 +52,7 @@ connection.onDidChangeConfiguration((change) => {
       fetchRemote: v?.fetchRemoteSchemas ?? settings.fetchRemote,
       delay: (u["checkDelay"] as number | undefined) ?? settings.delay,
       transformTimeout: (u["transform"] as { timeout?: number } | undefined)?.timeout ?? settings.transformTimeout,
+      oddSource: (u["odd"] as { source?: string } | undefined)?.source ?? settings.oddSource,
     };
   }
   documents.all().forEach((d) => schedule(d, 0));
@@ -130,7 +134,11 @@ async function codeDiagnostics(kind: Kind, uri: string, text: string, read: Retu
 
 async function xmlDiagnostics(uri: string, text: string, read: ReturnType<typeof makeReader>): Promise<Diagnostic[]> {
   if (!settings.validation) return [];
-  const report = await validate(uri, text, read);
+  // An ODD named as the schema is compiled, and its schemas checked
+  // against instead.
+  const { text: checked, odds } = rewriteOddModels(text, (ref) => new URL(ref, uri).href);
+  const failures = new Map<string, string>();
+  const report = await validate(uri, checked, odds.length ? oddReader(read, odds_, failures) : read);
   if (report.error) {
     // Not well-formed: the parser says where, in bytes.
     const at = /\(at byte (\d+)\)/.exec(report.error.message);
@@ -157,12 +165,18 @@ async function xmlDiagnostics(uri: string, text: string, read: ReturnType<typeof
   });
   // Schemas the document names that could not be read: say so once, at
   // the top. A document that names no schema gets no message.
-  if (report.needed?.length) {
+  for (const [odd, why] of failures) {
+    const name = odd.slice(odd.lastIndexOf("/") + 1);
+    const at = Math.max(0, text.indexOf(name));
+    out.push({ range: range(text, at, at + name.length), severity: DiagnosticSeverity.Error, source: "Urðr ODD", message: why });
+  }
+  const needed = (report.needed ?? []).filter((n) => !n.startsWith(ODD_RNG));
+  if (needed.length) {
     out.push({
       range: range(text, 0, 1),
       severity: DiagnosticSeverity.Warning,
       source: "Urðr XML",
-      message: report.note || `Could not read ${report.needed.join(", ")}`,
+      message: report.note || `Could not read ${needed.join(", ")}`,
     });
   }
   return out;
@@ -177,12 +191,13 @@ function languageName(language: string): string {
 const indexes = new Map<string, Promise<Index | undefined>>();
 
 function indexFor(doc: TextDocument): Promise<Index | undefined> {
-  const hints = schemaHints(doc.getText(), (ref) => new URL(ref, doc.uri).href);
+  const { text } = rewriteOddModels(doc.getText(), (ref) => new URL(ref, doc.uri).href);
+  const hints = schemaHints(text, (ref) => new URL(ref, doc.uri).href);
   if (!hints.length) return Promise.resolve(undefined);
   const key = JSON.stringify(hints);
   let p = indexes.get(key);
   if (!p) {
-    const read = makeReader(settings, (uri) => documents.get(uri)?.getText());
+    const read = oddReader(makeReader(settings, (uri) => documents.get(uri)?.getText()), odds_);
     p = outline(hints, read).then(({ answer, files }) => {
       if (!answer.outline) {
         // Nothing to suggest from yet (a schema not readable): try again
@@ -249,6 +264,38 @@ connection.onRequest("urdr/transform", (params: TransformParams) =>
   ),
 );
 connection.onShutdown(() => transformer.stop());
+
+// TEI ODD files, compiled with the TEI stylesheets that ship with the
+// extension (tei-stylesheets/, next to out/).
+const teiStylesheets = pathToFileURL(join(__dirname, "..", "tei-stylesheets")).href + "/";
+const odds_ = new OddCompiler(transformer, {
+  stylesheets: teiStylesheets,
+  source: () => settings.oddSource || new URL("source/p5subset.xml", teiStylesheets).href,
+  cacheDir: () => (settings.cacheDir ? join(dirname(settings.cacheDir), "odd") : undefined),
+  started: (odd) => {
+    let ended = false;
+    let report: { done(): void } | undefined;
+    void connection.window
+      .createWorkDoneProgress()
+      .then((r) => {
+        r.begin(`Compiling ${odd.slice(odd.lastIndexOf("/") + 1)}`, undefined, "an ODD takes a minute or more the first time");
+        report = r;
+        if (ended) r.done();
+      })
+      .catch(() => undefined);
+    return () => {
+      ended = true;
+      report?.done();
+    };
+  },
+});
+connection.onRequest("urdr/compileOdd", async (params: { odd: string }) => {
+  try {
+    return await odds_.compile(params.odd, makeReader(settings, (uri) => documents.get(uri)?.getText()));
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+});
 
 documents.onDidOpen((e) => schedule(e.document, 0));
 documents.onDidChangeContent((e) => schedule(e.document));
