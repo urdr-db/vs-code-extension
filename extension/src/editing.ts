@@ -11,6 +11,8 @@ interface Allowed {
   name: string;
   required: string[];
   detail?: string;
+  /** Whether it may also hold the selection; absent with no selection. */
+  fits?: boolean;
 }
 
 /** A tag to wrap with: its name, and what else to write in the start tag. */
@@ -38,13 +40,26 @@ function parseTyped(typed: string): Wrap | undefined {
 }
 
 async function pick(allowed: Allowed[]): Promise<Wrap | undefined> {
-  const qp = vscode.window.createQuickPick<vscode.QuickPickItem & { wrap?: Wrap }>();
+  type Item = vscode.QuickPickItem & { wrap?: Wrap };
+  const qp = vscode.window.createQuickPick<Item>();
   qp.title = "Surround with Tags";
   qp.placeholder = allowed.length ? "Element name (the schema's choices are listed)" : "Element name, such as hi or hi rend=\"italic\"";
-  const listed = allowed.map((a) => ({ label: a.name, description: a.detail, wrap: { name: a.name, attributes: "", required: a.required } }));
+  const item = (a: Allowed): Item => ({ label: a.name, description: a.detail, wrap: { name: a.name, attributes: "", required: a.required } });
+  const separator = (label: string): Item => ({ label, kind: vscode.QuickPickItemKind.Separator });
+  // With a selection, the elements that may also hold it come first, then
+  // the others allowed there.
+  const fit = allowed.filter((a) => a.fits === true);
+  const other = allowed.filter((a) => a.fits !== true);
+  const grouped = allowed.some((a) => a.fits !== undefined);
+  const listed: Item[] = grouped
+    ? [
+        ...(fit.length ? [separator("Fits the selection"), ...fit.map(item)] : []),
+        ...(other.length ? [separator(fit.length ? "Allowed here" : "Allowed here, but none fits the selection"), ...other.map(item)] : []),
+      ]
+    : allowed.map(item);
   const update = () => {
     const typed = parseTyped(qp.value);
-    const exact = typed && listed.some((i) => i.label === qp.value.trim());
+    const exact = typed && allowed.some((a) => a.name === qp.value.trim());
     qp.items = typed && !exact ? [{ label: qp.value.trim(), description: "as typed", wrap: typed, alwaysShow: true }, ...listed] : listed;
   };
   update();
@@ -88,8 +103,9 @@ export function registerEditing(context: vscode.ExtensionContext, client: () => 
     vscode.commands.registerTextEditorCommand("urdr.surroundWithTags", async (editor) => {
       const c = client();
       const at = editor.document.offsetAt(editor.selection.start);
+      const end = editor.document.offsetAt(editor.selection.end);
       const allowed = c
-        ? await c.sendRequest<Allowed[]>("urdr/elementsAt", { uri: editor.document.uri.toString(), offset: at }).catch(() => [] as Allowed[])
+        ? await c.sendRequest<Allowed[]>("urdr/elementsAt", { uri: editor.document.uri.toString(), offset: at, end }).catch(() => [] as Allowed[])
         : [];
       const w = await pick(allowed);
       if (w) await surround(editor, w);

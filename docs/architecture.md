@@ -134,5 +134,7 @@ comments, CDATA, processing instructions and the DOCTYPE, and matches
 start and end tags even in a half-edited document. They run in the
 client, so they need no round trip, except **Surround with Tags**, which
 asks the server (`urdr/elementsAt`) what the schema allows at the
-selection. Renaming is the LSP rename request, answered by the server
+selection, and which of those may also hold what is selected: its
+top-level elements must be children the outline allows, and its text
+allowed (order and counts are not checked). Renaming is the LSP rename request, answered by the server
 from the same scan, which also answers linked editing.

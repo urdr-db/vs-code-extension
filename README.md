@@ -63,7 +63,7 @@ and XSLT files. Each is also in the Command Palette under **Urðr-XML**.
 
 | Action | Windows, Linux | macOS |
 |---|---|---|
-| **Surround with Tags…**: wraps the selection in an element, choosing from those the schema allows there, or typing any name | `Ctrl+E` | `Cmd+E` |
+| **Surround with Tags…**: wraps the selection in an element, choosing from those the schema allows there (the ones that may also hold the selection come first), or typing any name | `Ctrl+E` | `Cmd+E` |
 | **Surround with the Last Tag** | `Ctrl+/` | `Cmd+/` |
 | **Delete Element Tags**: removes the tags around the caret, keeping the content | `Alt+Shift+X` | `Cmd+Option+X` |
 | **Split Element** at the caret, into two with the same attributes (but not the same id) | `Alt+Shift+D` | `Ctrl+Option+D` |

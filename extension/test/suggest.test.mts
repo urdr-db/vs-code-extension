@@ -9,7 +9,7 @@ import { loadFrom } from "../src/node.ts";
 import { contextAt } from "../src/context.ts";
 import { readDocs } from "../src/docs.ts";
 import { schemaHints } from "../src/hints.ts";
-import { hover, Index, suggest } from "../src/suggest.ts";
+import { hover, Index, mayHold, selectionContent, suggest, type OutlineElement } from "../src/suggest.ts";
 
 loadFrom(join(dirname(fileURLToPath(import.meta.url)), "..", "wasm"));
 
@@ -92,4 +92,32 @@ test("hovers show documentation, attributes and content", async () => {
   assert.match(onP.markdown, /May contain: name, and text/);
   const onRend = hover(text, text.indexOf("rend") + 2, ix);
   assert.match(onRend?.markdown ?? "", /rendition[\s\S]*`italic`/);
+});
+
+test("what a selection holds, and which elements may hold it", () => {
+  const sel = (text: string) => {
+    const a = text.indexOf("[");
+    const b = text.indexOf("]") - 1;
+    const t = text.replace("[", "").replace("]", "");
+    return selectionContent(t, a, b);
+  };
+  const T = "urn:t";
+  assert.deepEqual(sel(`<r xmlns="${T}"><p>[Hello <name/> and <x:b xmlns:x="urn:x">b</x:b>]</p></r>`), {
+    elements: [[T, "name"], ["urn:x", "b"]],
+    text: true,
+  });
+  assert.deepEqual(sel(`<r><p>[<name/> <!-- c --> <hi>a <name/></hi>]</p></r>`), { elements: [["", "name"], ["", "hi"]], text: false });
+  // Cutting through an element or a tag is no selection to wrap.
+  assert.equal(sel(`<r><p>[a <hi>b]</hi></p></r>`), undefined);
+  assert.equal(sel(`<r><p [n="1">a]</p></r>`), undefined);
+
+  const el = (children: string[], text: boolean, anyChildren = false): OutlineElement => ({
+    name: ["", "x"], top: false, children: children.map((c) => ["", c]), anyChildren, text, textValues: [], attributes: [], anyAttributes: false,
+  });
+  const content = { elements: [["", "name"]] as Array<[string, string]>, text: true };
+  assert.equal(mayHold(el(["name"], true), content), true);
+  assert.equal(mayHold(el(["name"], false), content), false);
+  assert.equal(mayHold(el(["hi"], true), content), false);
+  assert.equal(mayHold(el([], true, true), content), true);
+  assert.equal(mayHold(undefined, content), false);
 });
