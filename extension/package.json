@@ -1,7 +1,7 @@
 {
   "name": "urdr-xml",
   "displayName": "Urðr-XML",
-  "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, checks XSLT, XQuery and XPath, suggests what the schema allows, and runs and previews XSLT, with Urðr's own engine. No server, no Java.",
+  "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, checks XSLT, XQuery and XPath, suggests what the schema allows, runs and previews XSLT, and reads TEI ODD files as schemas, with Urðr's own engine. No server, no Java.",
   "version": "0.1.0",
   "publisher": "urdr-db",
   "icon": "media/icon.png",
@@ -73,6 +73,11 @@
             }
           }
         },
+        "urdr.odd.source": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The TEI source that ODD files compile against (`p5subset.xml`), as a path or URL. Empty uses the one that ships with the extension (TEI P5 4.12.0)."
+        },
         "urdr.transform.timeout": {
           "type": "number",
           "default": 60,
@@ -87,6 +92,11 @@
         "title": "Transform with XSLT…",
         "category": "Urðr-XML",
         "icon": "$(run)"
+      },
+      {
+        "command": "urdr.compileOdd",
+        "title": "Compile ODD to RELAX NG",
+        "category": "Urðr-XML"
       },
       {
         "command": "urdr.preview",
@@ -108,6 +118,7 @@
         { "command": "urdr.preview", "when": "resourceLangId == xml || resourceLangId == xsl" }
       ],
       "explorer/context": [
+        { "command": "urdr.compileOdd", "when": "resourceExtname == .odd", "group": "urdr" },
         {
           "command": "urdr.transform",
           "when": "resourceLangId == xml || resourceLangId == xsl",
@@ -120,6 +131,7 @@
         }
       ],
       "commandPalette": [
+        { "command": "urdr.compileOdd", "when": "resourceExtname == .odd" },
         { "command": "urdr.transform", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.preview", "when": "editorLangId == xml || editorLangId == xsl" }
       ]

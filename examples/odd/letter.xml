@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="letters.odd" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<!-- Checked against the schema letters.odd compiles to. The first time
+     takes a minute or so; it is kept afterwards. Two problems to find:
+     1. <persName> is not in this customisation (RELAX NG);
+     2. <hi> has no @rend (the ODD's own Schematron rule). -->
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt><title>Letter from Dorothy to Mary</title></titleStmt>
+      <publicationStmt><p>Example for the Urðr-XML extension.</p></publicationStmt>
+      <sourceDesc><p>Invented for testing.</p></sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div>
+        <opener><salute>My dear Mary,</salute></opener>
+        <p>William walked to <name>Keswick</name> with
+          <persName>Coleridge</persName>, and it was <hi>very</hi> cold.</p>
+        <closer><signed>Dorothy</signed></closer>
+      </div>
+    </body>
+  </text>
+</TEI>
