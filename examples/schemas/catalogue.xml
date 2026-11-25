@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Two problems: a manuscript with no id, and leaves that are not a positive number. -->
+<catalogue xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="catalogue.xsd">
+  <manuscript id="ms1">
+    <shelfmark>Cod. Pal. germ. 848</shelfmark>
+    <leaves>426</leaves>
+  </manuscript>
+  <manuscript>
+    <shelfmark>AM 291 4to</shelfmark>
+    <leaves>none</leaves>
+  </manuscript>
+</catalogue>

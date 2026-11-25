@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_lite.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<!-- A TEI Lite letter. The schema is read from tei-c.org the first time
+     (once; it is kept afterwards). Two problems to find:
+     1. <persName> is not part of TEI Lite (use <name type="person">);
+     2. <salute> has no attribute "tone". -->
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>Letter from Dorothy to Mary, 14 March 1802</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Example for the Urðr-XML extension.</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Invented for testing.</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div type="letter">
+        <opener>
+          <salute tone="warm">My dear Mary,</salute>
+        </opener>
+        <p>William walked to <name type="place">Keswick</name> with
+          <persName>Coleridge</persName> this morning.</p>
+      </div>
+    </body>
+  </text>
+</TEI>
