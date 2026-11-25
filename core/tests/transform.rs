@@ -1,4 +1,4 @@
-//! XSLT transformations, on the stylesheets in `examples/xslt`.
+//! XSLT transformations, on the stylesheets in `extension/test/fixtures/xslt`.
 #![allow(clippy::unwrap_used)] // Tests may unwrap.
 
 use std::collections::HashMap;
@@ -8,7 +8,11 @@ use urdr_vscode_core::transform::{TransformRequest, transform, transform_json};
 const BASE: &str = "file:///e/";
 
 fn example(path: &str) -> String {
-    std::fs::read_to_string(format!("{}/../examples/{path}", env!("CARGO_MANIFEST_DIR"))).unwrap()
+    std::fs::read_to_string(format!(
+        "{}/../extension/test/fixtures/{path}",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap()
 }
 
 fn uri(path: &str) -> String {
@@ -29,7 +33,7 @@ fn deep<T: Send>(f: impl FnOnce() -> T + Send) -> T {
 }
 
 /// Runs `request` as the extension does: reads what the answer says it
-/// needed from `examples/`, and runs it again.
+/// needed from the fixtures, and runs it again.
 fn converse(mut request: TransformRequest) -> urdr_vscode_core::transform::TransformAnswer {
     for _ in 0..10 {
         let answer = deep(|| transform(&request));

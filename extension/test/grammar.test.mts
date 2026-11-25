@@ -47,7 +47,7 @@ async function tokens(text: string): Promise<Array<[string, string]>> {
 const scopeOf = (ts: Array<[string, string]>, text: string, nth = 0) => ts.filter(([s]) => s === text)[nth]?.[1];
 
 test("the example queries get their colours", async () => {
-  const main = readFileSync(join(here, "..", "..", "examples", "xquery", "main.xq"), "utf8");
+  const main = readFileSync(join(here, "fixtures", "xquery", "main.xq"), "utf8");
   const t = await tokens(main);
   assert.equal(scopeOf(t, " Imports names.xqm from the same folder. No problems. "), "comment.block.xquery");
   assert.match(scopeOf(t, "import module")!, /keyword\.other\.prolog/);
@@ -59,7 +59,7 @@ test("the example queries get their colours", async () => {
   assert.match(scopeOf(t, "person", 2)!, /entity\.name\.tag/);
   assert.match(scopeOf(t, "person", 3)!, /^variable/);
 
-  const lib = readFileSync(join(here, "..", "..", "examples", "xquery", "names.xqm"), "utf8");
+  const lib = readFileSync(join(here, "fixtures", "xquery", "names.xqm"), "utf8");
   const l = await tokens(lib);
   assert.match(scopeOf(l, "n:people")!, /entity\.name\.function\.xquery/);
   assert.match(scopeOf(l, "xs:string")!, /support\.type/);

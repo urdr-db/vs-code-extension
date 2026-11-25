@@ -1,4 +1,4 @@
-![Urðr-XML: TEI, XSLT and XQuery checking for VS Code](splash.png)
+![Urðr-XML: TEI, XSLT and XQuery checking for VS Code](extension/images/splash.png)
 
 # Urðr-XML
 
@@ -16,11 +16,6 @@ Install **Urðr-XML** from the Extensions view, then open an XML file that
 names its schema. It works in desktop VS Code and in VS Code for the Web
 (vscode.dev and github.dev). Problems show up in the editor and in the **Problems**
 panel.
-
-The [examples folder](examples) has a document for each feature, and its
-README says what each file should show. You can download it as
-`urdr-xml-examples.zip` from the
-[Releases](https://github.com/urdr-db/vs-code-extension/releases) page.
 
 ## Validation
 

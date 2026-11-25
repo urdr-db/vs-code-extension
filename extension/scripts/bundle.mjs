@@ -23,8 +23,6 @@ await build({ ...web, format: "iife", entryPoints: ["src/transformer-web.ts"], o
 
 // The icon, the README and the changelog live at the repository root;
 // the package is made from this folder, so they are copied in.
-mkdirSync("media", { recursive: true });
-copyFileSync("../icon.png", "media/icon.png");
 // Links in them point at the repository, so they work on the
 // Marketplace as in VS Code: pictures at their raw files, the rest at
 // their pages on GitHub.
