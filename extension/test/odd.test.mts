@@ -7,13 +7,14 @@ import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { load, validate } from "../src/core.ts";
+import { validate } from "../src/core.ts";
+import { dirStore, loadFrom, threads } from "../src/node.ts";
 import { schemaHints } from "../src/hints.ts";
 import { ODD_RNG, OddCompiler, oddReader, rewriteOddModels } from "../src/odd.ts";
 import { Transformer } from "../src/transforms.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-load(join(here, "..", "wasm"));
+loadFrom(join(here, "..", "wasm"));
 const stylesheets = pathToFileURL(join(here, "..", "tei-stylesheets")).href + "/";
 const disk = (u: string) => readFile(fileURLToPath(u), "utf8").catch(() => undefined);
 
@@ -33,13 +34,13 @@ test("an xml-model that names an ODD becomes one that names its RELAX NG, over a
 });
 
 test("compiles an ODD to RELAX NG with its Schematron rules, keeps it, and checks documents against it", async () => {
-  const transformer = new Transformer(join(here, "..", "out", "transformer.js"));
+  const transformer = new Transformer(threads(join(here, "..", "out", "transformer.js")));
   const cache = await mkdtemp(join(tmpdir(), "urdr-odd-"));
   const started: string[] = [];
   const compiler = new OddCompiler(transformer, {
-    stylesheets,
+    stylesheets: () => stylesheets,
     source: () => new URL("source/p5subset.xml", stylesheets).href,
-    cacheDir: () => cache,
+    store: dirStore(() => cache),
     started: (odd) => (started.push(odd), () => undefined),
   });
   // A small customisation: TEI's core and header, with <p> and <hi> only
@@ -71,7 +72,7 @@ test("compiles an ODD to RELAX NG with its Schematron rules, keeps it, and check
     assert.match(compiled.rng, /hi needs @rend/);
     assert.equal((await readdir(cache)).length, 1);
     // Kept: the same text is not compiled again, even by a new compiler.
-    const again = new OddCompiler(transformer, { stylesheets, source: () => new URL("source/p5subset.xml", stylesheets).href, cacheDir: () => cache, started: (o) => (started.push(o), () => undefined) });
+    const again = new OddCompiler(transformer, { stylesheets: () => stylesheets, source: () => new URL("source/p5subset.xml", stylesheets).href, store: dirStore(() => cache), started: (o) => (started.push(o), () => undefined) });
     assert.deepEqual(await again.compile(odd, read), compiled);
     assert.equal(started.length, 1);
 

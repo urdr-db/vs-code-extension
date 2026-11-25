@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Runs in VS Code for the Web (vscode.dev, github.dev): checks,
+  suggestions, transformations, the preview and ODD files all work in
+  the browser.
+
 ## 0.3.1
 
 First release on the Visual Studio Marketplace.

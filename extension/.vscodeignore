@@ -2,6 +2,9 @@
 !out/client.js
 !out/server.js
 !out/transformer.js
+!out/web/client.js
+!out/web/server.js
+!out/web/transformer.js
 !out/urdr_vscode_core_bg.wasm
 !package.json
 !README.md
