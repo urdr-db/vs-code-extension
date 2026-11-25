@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A small RELAX NG schema for letters, for trying the extension. -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="letters">
+      <oneOrMore><ref name="letter"/></oneOrMore>
+    </element>
+  </start>
+  <define name="letter">
+    <element name="letter">
+      <attribute name="date"><data type="date"/></attribute>
+      <element name="from"><text/></element>
+      <element name="to"><text/></element>
+      <oneOrMore>
+        <element name="p"><mixed><zeroOrMore><ref name="name"/></zeroOrMore></mixed></element>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="name">
+    <element name="name">
+      <optional><attribute name="ref"><data type="anyURI"/></attribute></optional>
+      <text/>
+    </element>
+  </define>
+</grammar>

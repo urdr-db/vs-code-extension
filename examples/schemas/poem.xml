@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A DTD in the document itself. One problem: a stanza with no lines. -->
+<!DOCTYPE poem [
+  <!ELEMENT poem (title, stanza+)>
+  <!ELEMENT title (#PCDATA)>
+  <!ELEMENT stanza (l+)>
+  <!ELEMENT l (#PCDATA)>
+]>
+<poem>
+  <title>Völuspá (opening)</title>
+  <stanza>
+    <l>Hljóðs bið ek allar</l>
+    <l>helgar kindir</l>
+  </stanza>
+  <stanza/>
+</poem>

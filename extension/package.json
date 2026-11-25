@@ -1,6 +1,6 @@
 {
   "name": "urdr-xml",
-  "displayName": "Urðr XML: TEI, XSLT and XQuery",
+  "displayName": "Urðr-XML",
   "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, and checks XSLT, XQuery and XPath, with Urðr's own engine. No server, no Java.",
   "version": "0.1.0",
   "publisher": "urdr-db",
@@ -24,7 +24,7 @@
       }
     ],
     "configuration": {
-      "title": "Urðr XML",
+      "title": "Urðr-XML",
       "properties": {
         "urdr.validation.enabled": {
           "type": "boolean",

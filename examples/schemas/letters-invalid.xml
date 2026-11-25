@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="letters.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="letters.sch" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<!-- Four problems to find:
+     1. the date is not a date (RELAX NG);
+     2. <note> is not allowed in a letter (RELAX NG);
+     3. the letter is written to its own sender (Schematron);
+     4. the name's ref is not https (Schematron). -->
+<letters>
+  <letter date="14 March 1802">
+    <from>Dorothy</from>
+    <to>Dorothy</to>
+    <p>Dear diary, I met <name ref="http://example.org/coleridge">Coleridge</name>.</p>
+    <note>Undated?</note>
+  </letter>
+</letters>
