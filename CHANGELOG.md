@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.1
 
 - Typing "urdr" in the Command Palette finds the Urðr-XML commands.
 - Surround with Tags lists first the elements that may also hold the
