@@ -3,3 +3,5 @@ node_modules/
 /extension/out/
 /extension/wasm/
 *.vsix
+/extension/media/
+/extension/README.md
