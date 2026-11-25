@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Runs in VS Code for the Web (vscode.dev, github.dev): checks,
   suggestions, transformations, the preview and ODD files all work in
