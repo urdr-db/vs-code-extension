@@ -99,8 +99,13 @@ jobs:
           mv urdr-xml.vsix "urdr-xml-$version.vsix"
           flags=""
           case "$version" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip \
-            --title "Urðr-XML $version" --generate-notes $flags
+          # A re-run (after a failed Marketplace step) keeps the release.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip \
+              --title "Urðr-XML $version" --generate-notes $flags
+          fi
       # The Marketplaces take only plain versions, so a pre-release
       # (v0.4.0-beta.1) stays on GitHub.
       #
