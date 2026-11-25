@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A small TEI customisation: the header, paragraphs, names and
+     highlighting, and a rule that <hi> must say how it looked. letter.xml
+     uses it as its schema; open this file to change the rules. -->
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:sch="http://purl.oclc.org/dsdl/schematron">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt><title>Letters: a small TEI customisation</title></titleStmt>
+      <publicationStmt><p>Example for the Urðr-XML extension.</p></publicationStmt>
+      <sourceDesc><p>Written for testing.</p></sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <schemaSpec ident="letters" start="TEI">
+        <moduleRef key="tei"/>
+        <moduleRef key="header" include="teiHeader fileDesc titleStmt publicationStmt sourceDesc"/>
+        <moduleRef key="core" include="p hi name title"/>
+        <moduleRef key="textstructure" include="TEI text body div opener closer salute signed"/>
+        <elementSpec ident="hi" mode="change">
+          <constraintSpec ident="hi-rend" scheme="schematron" mode="add">
+            <constraint>
+              <sch:rule context="tei:hi">
+                <sch:assert test="@rend">Say how the text looked with @rend, such as rend="italic".</sch:assert>
+              </sch:rule>
+            </constraint>
+          </constraintSpec>
+        </elementSpec>
+      </schemaSpec>
+    </body>
+  </text>
+</TEI>

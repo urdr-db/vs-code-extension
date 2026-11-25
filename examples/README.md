@@ -11,6 +11,7 @@ file. Problems show as squiggles and in the **Problems** panel
 | `schemas/catalogue.xml` | XSD | 2 problems |
 | `schemas/poem.xml` | DTD | 1 problem |
 | `tei/letter.xml` | TEI Lite from tei-c.org (needs internet the first time) | 2 problems |
+| `odd/letter.xml` | the TEI customisation `odd/letters.odd`, compiled in the editor (a minute the first time) | 2 problems |
 | `xslt/letters-to-html.xsl` | XSLT 3.0 with an include | nothing |
 | `xslt/broken.xsl` | XSLT 3.0 | problems one at a time |
 | `xslt/tei-to-html.xsl`, `xslt/letter-pages.xsl` | XSLT 3.0, for transforming (below) | nothing |

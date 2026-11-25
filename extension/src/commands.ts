@@ -202,6 +202,32 @@ export function register(context: vscode.ExtensionContext, client: () => Languag
     }),
   );
 
+  // An ODD's schema as a file, for tools that need it on disk.
+  context.subscriptions.push(
+    vscode.commands.registerCommand("urdr.compileOdd", async (resource?: vscode.Uri) => {
+      const odd = resource ?? vscode.window.activeTextEditor?.document.uri;
+      const c = client();
+      if (!odd || !c) return;
+      const answer = await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: `Compiling ${odd.path.split("/").pop()}… (a minute or more the first time)` },
+        () => c.sendRequest<{ rng?: string; error?: string }>("urdr/compileOdd", { odd: odd.toString() }),
+      );
+      if (answer.error || answer.rng === undefined) {
+        void vscode.window.showErrorMessage(answer.error ?? "The ODD could not be compiled.");
+        return;
+      }
+      const target = await vscode.window.showSaveDialog({
+        defaultUri: odd.with({ path: odd.path.replace(/(\.odd)?$/i, ".rng") }),
+        filters: { "RELAX NG": ["rng"] },
+        saveLabel: "Save the RELAX NG schema",
+      });
+      if (!target) return;
+      const enc = new TextEncoder();
+      await vscode.workspace.fs.writeFile(target, enc.encode(answer.rng));
+      void vscode.window.showInformationMessage(`Wrote ${vscode.workspace.asRelativePath(target)}, with the ODD's Schematron rules embedded.`);
+    }),
+  );
+
   const previews = new Map<string, Preview>();
   context.subscriptions.push(
     vscode.commands.registerCommand("urdr.preview", async (resource?: vscode.Uri) => {

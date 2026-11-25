@@ -26,6 +26,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       delay: config.get<number>("checkDelay", 400),
       cacheDir: vscode.Uri.joinPath(context.globalStorageUri, "schemas").fsPath,
       transformTimeout: config.get<number>("transform.timeout", 60),
+      oddSource: config.get<string>("odd.source", ""),
     },
   };
   client = new LanguageClient("urdr", "Urðr-XML", server, options);
