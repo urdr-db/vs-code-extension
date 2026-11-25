@@ -48,11 +48,14 @@ git push origin v0.3.1
 ```
 
 CI builds and tests the tag, checks that it matches the version, and
-publishes `urdr-xml-0.3.1.vsix` and the examples on the Releases page. It
-publishes to the Visual Studio Marketplace when the repository has the
-secret `VSCE_PAT` (a token for the publisher `urdr-db`), and to Open VSX
-when it has `OVSX_PAT`. A version with a hyphen (`v0.4.0-beta.1`) is a
-pre-release on GitHub only.
+publishes `urdr-xml-0.3.1.vsix` and the examples on the Releases page.
+A version with a hyphen (`v0.4.0-beta.1`) is a pre-release on GitHub
+only; other versions also go to:
+
+- the Visual Studio Marketplace, when the repository variable
+  `MARKETPLACE_PUBLISH` is `true`. The publisher `urdr-db` trusts this
+  repository's `ci.yml` (Trusted Publishing), so no token is stored.
+- Open VSX, when the repository has the secret `OVSX_PAT`.
 
 Every push to `main` also replaces the **dev** pre-release with a build
 of that commit.
