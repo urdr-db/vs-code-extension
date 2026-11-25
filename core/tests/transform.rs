@@ -8,7 +8,11 @@ use urdr_vscode_core::transform::{TransformRequest, transform, transform_json};
 const BASE: &str = "file:///e/";
 
 fn example(path: &str) -> String {
-    std::fs::read_to_string(format!("{}/../extension/test/fixtures/{path}", env!("CARGO_MANIFEST_DIR"))).unwrap()
+    std::fs::read_to_string(format!(
+        "{}/../extension/test/fixtures/{path}",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap()
 }
 
 fn uri(path: &str) -> String {
