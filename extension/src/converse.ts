@@ -8,15 +8,15 @@ export type Reader = (uri: string) => Promise<string | undefined>;
 const ROUNDS = 25;
 
 /** Runs `check` with the files it asks for. `check` gets every file read
- * so far and answers JSON with a `needed` list. */
+ * so far and answers JSON with a `needed` list, now or later. */
 export async function converse<T extends { needed?: string[] }>(
-  check: (files: Record<string, string>) => T,
+  check: (files: Record<string, string>) => T | Promise<T>,
   read: Reader,
   /** Filled with every file read, for callers that want the texts. */
   files: Record<string, string> = {},
 ): Promise<T> {
   const tried = new Set<string>();
-  let answer = check(files);
+  let answer = await check(files);
   for (let round = 0; round < ROUNDS; round++) {
     const fresh = (answer.needed ?? []).filter((u) => !tried.has(u));
     if (!fresh.length) break;
@@ -27,7 +27,7 @@ export async function converse<T extends { needed?: string[] }>(
         if (text !== undefined) files[uri] = text;
       }),
     );
-    answer = check(files);
+    answer = await check(files);
   }
   return answer;
 }

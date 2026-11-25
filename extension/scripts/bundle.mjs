@@ -1,4 +1,5 @@
-// Bundles the client and the language server into out/, and copies the
+// Bundles the client, the language server and its transformation
+// worker into out/, and copies the
 // WebAssembly module next to the server.
 import { build } from "esbuild";
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -9,6 +10,7 @@ mkdirSync("out", { recursive: true });
 const common = { logOverride: { "empty-import-meta": "silent" }, bundle: true, platform: "node", format: "cjs", target: "node20", sourcemap: true, minify: true };
 await build({ ...common, entryPoints: ["src/client.ts"], outfile: "out/client.js", external: ["vscode"] });
 await build({ ...common, entryPoints: ["src/server.ts"], outfile: "out/server.js" });
+await build({ ...common, entryPoints: ["src/transformer.ts"], outfile: "out/transformer.js" });
 copyFileSync("wasm/urdr_vscode_core_bg.wasm", "out/urdr_vscode_core_bg.wasm");
 
 // The icon, the splash and the README live at the repository root; the

@@ -1,7 +1,7 @@
 // The Rust core, compiled to WebAssembly, and the checks it runs.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { initSync, validateDocument, checkXquery, checkXpath, checkXslt, schemaOutline } from "../wasm/urdr_vscode_core.js";
+import { initSync, validateDocument, checkXquery, checkXpath, checkXslt, schemaOutline, transformXslt } from "../wasm/urdr_vscode_core.js";
 import { converse, type Reader } from "./converse.ts";
 import type { SchemaHint } from "./hints.ts";
 import type { Outline } from "./suggest.ts";
@@ -87,4 +87,43 @@ export async function outline(hints: SchemaHint[], read: Reader): Promise<{ answ
   const request = (f: Record<string, string>) => JSON.stringify({ schemas: hints, files: f });
   const answer = await converse((f) => JSON.parse(schemaOutline(request(f))) as OutlineAnswer, read, files);
   return { answer, files };
+}
+
+/** A transformation to run, as the core takes it (without `files`). */
+export interface TransformRequest {
+  stylesheet: string;
+  stylesheetText: string;
+  source?: string | null;
+  sourceText?: string | null;
+  parameters?: Record<string, string>;
+  initialTemplate?: string | null;
+  initialMode?: string | null;
+  /** Where the principal result goes. */
+  output?: string | null;
+  /** Milliseconds since 1970: WebAssembly has no clock. */
+  now?: number;
+  /** Offset from UTC in minutes. */
+  timezone?: number;
+}
+
+/** One serialized result: the principal one has an empty `href`. */
+export interface TransformResult {
+  href: string;
+  text: string;
+  method: "xml" | "html" | "xhtml" | "text" | "json" | "adaptive";
+  mediaType: string;
+}
+
+export interface TransformAnswer {
+  results: TransformResult[];
+  messages: string[];
+  problems: CoreProblem[];
+  needed: string[];
+}
+
+/** Runs one round of a transformation. Slow stylesheets block the
+ * thread: the language server runs this in a worker (transformer.ts). */
+export function transformOnce(request: string): string {
+  load();
+  return transformXslt(request);
 }

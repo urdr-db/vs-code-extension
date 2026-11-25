@@ -14,13 +14,16 @@ publish = false
 # (decision: git dependency pinned to a tag). Until the next tag ships the
 # changes the extension needs, a commit on main. Move every line together.
 [workspace.dependencies]
-urdr-validate-wasm = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xdm = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xml-parse = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xml-validate = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xq-analyze = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xq-syntax = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
-urdr-xslt = { git = "https://github.com/silencesys/dh--urdr", rev = "4b965ad6f971e82e36d33ab33e818ba2224f0380" }
+urdr-validate-wasm = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xdm = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xml-parse = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xml-serialize = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xml-validate = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xq-analyze = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xq-exec = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xq-functions = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xq-syntax = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
+urdr-xslt = { git = "https://github.com/silencesys/dh--urdr", rev = "f6c67f5d261039fce83251cfb1d2495b20da7afa" }
 serde_json = "1"
 # Must match the version urdr-validate-wasm pins, and the wasm-bindgen-cli
 # the build uses.
