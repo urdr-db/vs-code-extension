@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Typing "urdr" in the Command Palette finds the Urðr-XML commands.
+
 ## 0.5.0
 
 - Element actions as in Oxygen XML Editor, with its keys: Surround with
