@@ -17,7 +17,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { check, outline, validate, type Kind } from "./core.ts";
 import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
-import { hover, Index, suggest } from "./suggest.ts";
+import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
 import { tagNames } from "./elements.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
@@ -283,13 +283,16 @@ export function serve(connection: Connection, platform: Platform): void {
   });
 
   // The elements allowed at an offset, for "Surround with Tags": what the
-  // schema would suggest after a "<" typed there.
-  connection.onRequest("urdr/elementsAt", async (params: { uri: string; offset: number }) => {
+  // schema would suggest after a "<" typed there. With a selection up to
+  // `end`, each says whether it may also hold what is selected.
+  connection.onRequest("urdr/elementsAt", async (params: { uri: string; offset: number; end?: number }) => {
     const doc = markup(params.uri);
     if (!doc) return [];
     const index = await indexFor(doc).catch(() => undefined);
     if (!index) return [];
     const text = doc.getText();
+    const content = params.end !== undefined && params.end > params.offset ? selectionContent(text, params.offset, params.end) : undefined;
+    const grouped = content && (content.text || content.elements.length > 0) ? content : undefined;
     const typed = text.slice(0, params.offset) + "<" + text.slice(params.offset);
     return suggest(typed, params.offset + 1, index)
       .filter((s) => s.kind === "element")
@@ -297,6 +300,7 @@ export function serve(connection: Connection, platform: Platform): void {
         name: s.label,
         required: [...s.insert.matchAll(/ ([^\s=]+)="\$\d+"/g)].map((m) => m[1]!),
         detail: s.detail,
+        fits: grouped && s.name ? mayHold(index.element(s.name), grouped) : undefined,
       }));
   });
 

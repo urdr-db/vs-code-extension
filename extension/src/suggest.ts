@@ -3,6 +3,7 @@
 // values they may take.
 import { attributeName, contextAt, nameAt, type OpenElement } from "./context.ts";
 import type { Docs } from "./docs.ts";
+import { elements } from "./elements.ts";
 
 export type Name = [string, string];
 
@@ -40,6 +41,8 @@ export interface Suggestion {
   /** Open suggestions again after inserting (for values). */
   retrigger?: boolean;
   required?: boolean;
+  /** For an element: its namespace and local name. */
+  name?: Name;
 }
 
 const XML_NS = "http://www.w3.org/XML/1998/namespace";
@@ -99,6 +102,7 @@ export function suggest(text: string, offset: number, index: Index): Suggestion[
           detail: summary(el),
           documentation: index.docs.elements.get(n[1]),
           start: place.start,
+          name: n,
         };
       });
     }
@@ -135,6 +139,49 @@ export function suggest(text: string, offset: number, index: Index): Suggestion[
       return (el?.textValues ?? []).map((v) => ({ label: v, kind: "value" as const, insert: escapeSnippet(v), start: offset }));
     }
   }
+}
+
+/** What a selection holds at its top level: the names of its elements,
+ * and whether it has text. Undefined when it cuts through a tag or an
+ * element, so that wrapping it would not be well-formed. */
+export function selectionContent(text: string, start: number, end: number): { elements: Name[]; text: boolean } | undefined {
+  const top: Array<{ start: number; end: number; qname: string; tag: string }> = [];
+  for (const e of elements(text)) {
+    if (e.open.start >= end || e.end <= start) continue;
+    const inside = e.open.start >= start && e.end <= end;
+    const around = e.contentStart <= start && end <= e.contentEnd;
+    if (!inside && !around) return undefined;
+    if (inside && (!top.length || e.open.start >= top[top.length - 1]!.end)) {
+      top.push({ start: e.open.start, end: e.end, qname: e.open.name, tag: text.slice(e.open.start, e.open.end) });
+    }
+  }
+  // The selection's parent gives the namespaces, and each element's own
+  // xmlns declarations add to them.
+  const scope = contextAt(text, start).open.at(-1)?.scope ?? new Map<string, string>();
+  const names = top.map((t): Name => {
+    const own = new Map(scope);
+    for (const m of t.tag.matchAll(/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']*)["']/g)) own.set(m[1] ?? "", m[2]!);
+    const colon = t.qname.indexOf(":");
+    return [own.get(colon < 0 ? "" : t.qname.slice(0, colon)) ?? "", t.qname.slice(colon + 1)];
+  });
+  let rest = "";
+  let at = start;
+  for (const t of top) {
+    rest += text.slice(at, t.start);
+    at = t.end;
+  }
+  rest += text.slice(at, end);
+  const hasText = /\S/.test(rest.replace(/<!--[\s\S]*?-->|<\?[\s\S]*?\?>/g, ""));
+  return { elements: names, text: hasText };
+}
+
+/** Whether `el` may hold `content`, by its outline: every element in it
+ * is a child it allows, and any text is allowed. Order and counts are not
+ * checked. */
+export function mayHold(el: OutlineElement | undefined, content: { elements: Name[]; text: boolean }): boolean {
+  if (!el) return false;
+  if (content.text && !el.text) return false;
+  return el.anyChildren || content.elements.every((n) => el.children.some((c) => key(c) === key(n)));
 }
 
 function summary(el: OutlineElement | undefined): string | undefined {
