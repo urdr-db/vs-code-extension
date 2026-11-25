@@ -77,6 +77,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      # Tokens for the Visual Studio Marketplace (publisher urdr-db) and
+      # Open VSX. Without one, that step is skipped.
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -96,6 +100,14 @@ jobs:
           case "$version" in *-*) flags="--prerelease" ;; esac
           gh release create "$GITHUB_REF_NAME" "urdr-xml-$version.vsix" urdr-xml-examples.zip \
             --title "Urðr-XML $version" --generate-notes $flags
+      # The Marketplaces take only plain versions, so a pre-release
+      # (v0.4.0-beta.1) stays on GitHub.
+      - name: Publish to the Visual Studio Marketplace
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && env.VSCE_PAT != ''
+        run: npx --yes @vscode/vsce@3 publish --packagePath "urdr-xml-${GITHUB_REF_NAME#v}.vsix"
+      - name: Publish to Open VSX
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && env.OVSX_PAT != ''
+        run: npx --yes ovsx publish "urdr-xml-${GITHUB_REF_NAME#v}.vsix" -p "$OVSX_PAT"
       - name: Replace the dev pre-release
         if: github.ref == 'refs/heads/main'
         run: |

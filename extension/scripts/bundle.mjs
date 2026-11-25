@@ -13,9 +13,19 @@ await build({ ...common, entryPoints: ["src/server.ts"], outfile: "out/server.js
 await build({ ...common, entryPoints: ["src/transformer.ts"], outfile: "out/transformer.js" });
 copyFileSync("wasm/urdr_vscode_core_bg.wasm", "out/urdr_vscode_core_bg.wasm");
 
-// The icon, the splash and the README live at the repository root; the
-// package is made from this folder, so they are copied in.
+// The icon, the README and the changelog live at the repository root;
+// the package is made from this folder, so they are copied in.
 mkdirSync("media", { recursive: true });
 copyFileSync("../icon.png", "media/icon.png");
-copyFileSync("../splash.png", "media/splash.png");
-writeFileSync("README.md", readFileSync("../README.md", "utf8").replace("](splash.png)", "](media/splash.png)"));
+// Links in them point at the repository, so they work on the
+// Marketplace as in VS Code: pictures at their raw files, the rest at
+// their pages on GitHub.
+const REPO = "https://github.com/urdr-db/vs-code-extension";
+const absolute = (md) =>
+  md.replace(/(!?)\[([^\]]*)\]\((?![a-z][\w+.-]*:|#)([^)\s]+)\)/gi, (_, image, text, path) =>
+    image
+      ? `![${text}](${REPO.replace("github.com", "raw.githubusercontent.com")}/main/${path})`
+      : `[${text}](${REPO}/blob/main/${path})`,
+  );
+writeFileSync("README.md", absolute(readFileSync("../README.md", "utf8")));
+writeFileSync("CHANGELOG.md", absolute(readFileSync("../CHANGELOG.md", "utf8")));
