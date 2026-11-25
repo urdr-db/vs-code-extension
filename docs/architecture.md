@@ -2,15 +2,37 @@
 
 ## The pieces
 
-- **The client** (`extension/src/client.ts`) is what VS Code loads. It
-  starts the language server and passes it the settings.
-- **The language server** (`extension/src/server.ts`) runs in its own
-  Node process, so long checks never slow down the editor. It watches the
-  open documents and publishes what it finds as diagnostics, through the
+- **The client** is what VS Code loads. It starts the language server
+  and passes it the settings.
+- **The language server** (`extension/src/service.ts`) runs apart from
+  the editor, so long checks never slow it down. It watches the open
+  documents and publishes what it finds as diagnostics, through the
   Language Server Protocol (LSP), which other editors speak too.
 - **The core** (`core/`) is a Rust crate built on the Urðr crates,
   compiled to WebAssembly. The server loads it once and calls it for
   every check.
+
+## Desktop and web
+
+The same server runs in two places. What differs is behind one
+interface, `Platform` (`extension/src/platform.ts`): how files are read,
+where downloads and compiled ODDs are kept, and how the transformation
+worker starts.
+
+| | Desktop VS Code | VS Code for the Web |
+|---|---|---|
+| Client | `client.ts` | `client-web.ts` |
+| Server | a Node process (`server.ts`, `node.ts`) | a web worker (`server-web.ts`, `web.ts`) |
+| Workspace files | read from the disk | asked of the client, which reads them with `workspace.fs` |
+| Kept texts | files in the extension's storage | asked of the client, kept in the extension's storage |
+| Transformations | a worker thread (`transformer.ts`) | a web worker (`transformer-web.ts`) |
+| The module and the TEI stylesheets | read from the disk | fetched from the extension's address |
+
+The web bundles take `vscode-languageserver/node` from its browser half
+(`extension/scripts/bundle.mjs`), and a test checks they need nothing
+from Node. In the browser the server compiles the module once and hands
+it to each transformation worker; a worker starts from a blob URL, as a
+worker may only start one from its own origin.
 
 ## Checks are conversations
 
@@ -21,11 +43,8 @@ problems it found and the files it still needs (`needed`); the server
 reads those and asks again, until nothing new is needed
 (`extension/src/converse.ts`).
 
-The core needs no disk or network of its own, so it could also run in
-the browser (vscode.dev). The extension itself is desktop-only for now.
-
-The server reads needed files from open editors first, then the disk,
-then the web for `http(s)` addresses (`extension/src/reader.ts`). Each
+The server reads needed files from open editors first, then the
+workspace, then the web for `http(s)` addresses (`extension/src/reader.ts`). Each
 download is kept in the extension's storage, so the TEI schemas are
 fetched once.
 
@@ -72,14 +91,17 @@ stylesheets, so a preview that runs again as the source changes does not
 compile again.
 
 A transformation can take long, or never end. The server runs it in a
-worker thread (`extension/src/transformer.ts`, driven by
+worker (`extension/src/transformer.ts`, driven by
 `extension/src/transforms.ts`) and stops the worker when it takes longer
 than the time limit; the next transformation starts a new one.
 
-Stylesheets such as TEI's recurse deeply: the WebAssembly module gets a 64 MiB stack (`.cargo/config.toml`), the
-worker a large V8 stack, and calls may nest 3,000 deep before the run
-stops with `urdr:LIMT0002`, short of where the stack would run out. If it
-runs out anyway, the worker is replaced and the error says so.
+Stylesheets such as TEI's recurse deeply: the WebAssembly module gets a
+64 MiB stack (`.cargo/config.toml`), the Node worker a large V8 stack,
+and calls may nest 3,000 deep before the run stops with
+`urdr:LIMT0002`, short of where the stack would run out. A browser gives
+its workers a smaller stack, but the TEI stylesheets still fit: an ODD
+compiles in Chromium. If the stack runs out anyway, the worker is
+replaced and the error says so.
 
 The extension side (`extension/src/commands.ts`) picks the stylesheet,
 asks the server with the `urdr/transform` request, and writes the results

@@ -1,6 +1,4 @@
 // The Rust core, compiled to WebAssembly, and the checks it runs.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { initSync, validateDocument, checkXquery, checkXpath, checkXslt, schemaOutline, transformXslt } from "../wasm/urdr_vscode_core.js";
 import { converse, type Reader } from "./converse.ts";
 import type { SchemaHint } from "./hints.ts";
@@ -8,11 +6,15 @@ import type { Outline } from "./suggest.ts";
 
 let loaded = false;
 
-/** Loads the module, once. It sits next to the bundled server. */
-export function load(dir?: string): void {
+/** Loads the module, once: its bytes, or the module compiled. */
+export function load(module: BufferSource | WebAssembly.Module): void {
   if (loaded) return;
-  initSync({ module: readFileSync(join(dir ?? __dirname, "urdr_vscode_core_bg.wasm")) });
+  initSync({ module });
   loaded = true;
+}
+
+function ready(): void {
+  if (!loaded) throw new Error("The WebAssembly module is not loaded yet.");
 }
 
 /** A problem in a query or stylesheet. Offsets are UTF-8 bytes. */
@@ -41,7 +43,7 @@ const checks: Record<Kind, (request: string) => string> = {
 
 /** Checks a query or stylesheet, reading the modules it imports. */
 export function check(kind: Kind, uri: string, text: string, read: Reader): Promise<CoreAnswer> {
-  load();
+  ready();
   return converse((files) => JSON.parse(checks[kind](JSON.stringify({ text, uri, files }))) as CoreAnswer, read);
 }
 
@@ -66,7 +68,7 @@ export interface Report {
 
 /** Checks an XML document against the schemas it names, reading them. */
 export function validate(uri: string, text: string, read: Reader): Promise<Report> {
-  load();
+  ready();
   return converse(
     (files) => JSON.parse(validateDocument(JSON.stringify({ document: text, base: uri, files }))) as Report,
     read,
@@ -82,7 +84,7 @@ export interface OutlineAnswer {
 /** The outline of the schemas `hints` name, with every schema text read
  * for it (for their documentation). */
 export async function outline(hints: SchemaHint[], read: Reader): Promise<{ answer: OutlineAnswer; files: Record<string, string> }> {
-  load();
+  ready();
   const files: Record<string, string> = {};
   const request = (f: Record<string, string>) => JSON.stringify({ schemas: hints, files: f });
   const answer = await converse((f) => JSON.parse(schemaOutline(request(f))) as OutlineAnswer, read, files);
@@ -124,6 +126,6 @@ export interface TransformAnswer {
 /** Runs one round of a transformation. Slow stylesheets block the
  * thread: the language server runs this in a worker (transformer.ts). */
 export function transformOnce(request: string): string {
-  load();
+  ready();
   return transformXslt(request);
 }

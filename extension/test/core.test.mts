@@ -4,11 +4,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { check, load, validate } from "../src/core.ts";
+import { check, validate } from "../src/core.ts";
+import { loadFrom } from "../src/node.ts";
 import { locate } from "../src/locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex } from "../src/positions.ts";
 
-load(join(dirname(fileURLToPath(import.meta.url)), "..", "wasm"));
+loadFrom(join(dirname(fileURLToPath(import.meta.url)), "..", "wasm"));
 
 const files: Record<string, string> = {
   "file:///p/a.rng": `<element name="a" xmlns="http://relaxng.org/ns/structure/1.0"><zeroOrMore><element name="b"><attribute name="n"><data type="integer" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/></attribute></element></zeroOrMore></element>`,

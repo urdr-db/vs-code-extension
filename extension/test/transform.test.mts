@@ -7,13 +7,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { TransformAnswer } from "../src/core.ts";
 import { expand, previewPage, stylesheetHref } from "../src/preview-html.ts";
+import { threads } from "../src/node.ts";
 import { Transformer } from "../src/transforms.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const examples = join(here, "..", "..", "examples");
 const uri = (path: string) => pathToFileURL(join(examples, path)).href;
 const disk = (u: string) => readFile(fileURLToPath(u), "utf8").catch(() => undefined);
-const worker = () => new Transformer(join(here, "..", "out", "transformer.js"));
+const worker = () => new Transformer(threads(join(here, "..", "out", "transformer.js")));
 
 test("finds the XSLT named by <?xml-stylesheet?>, not CSS", () => {
   assert.equal(stylesheetHref(`<?xml-stylesheet type="text/css" href="a.css"?><?xml-stylesheet type="text/xsl" href="b.xsl"?><r/>`), "b.xsl");
@@ -83,5 +84,13 @@ test("the package includes every bundle the build makes", async () => {
   const ignore = (await readFile(join(here, "..", ".vscodeignore"), "utf8")).split("\n");
   const outs = [...bundle.matchAll(/outfile: "([^"]+)"/g)].map((m) => m[1]!);
   assert.ok(outs.includes("out/transformer.js"));
+  assert.ok(outs.includes("out/web/server.js"));
   for (const o of outs) assert.ok(ignore.includes(`!${o}`), `${o} is left out of the package`);
+});
+
+test("the web bundles need nothing from Node", async () => {
+  for (const name of ["client", "server", "transformer"]) {
+    const code = await readFile(join(here, "..", "out", "web", `${name}.js`), "utf8");
+    assert.doesNotMatch(code, /require\("(node:)?(fs|path|url|crypto|worker_threads|child_process|net|os)(\/[a-z]+)?"\)/, `out/web/${name}.js`);
+  }
 });

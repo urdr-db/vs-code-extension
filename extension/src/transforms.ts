@@ -1,9 +1,9 @@
 // Running XSLT transformations for the language server: in a worker
 // thread, with a time limit, reading the modules and documents the
 // stylesheet asks for.
-import { Worker } from "node:worker_threads";
 import { converse, type Reader } from "./converse.ts";
 import type { CoreProblem, TransformAnswer, TransformRequest } from "./core.ts";
+import type { Spawn, WorkerHandle, WorkerReply } from "./platform.ts";
 
 /** What the extension asks the server to run: URIs, not texts. */
 export interface TransformParams {
@@ -22,46 +22,46 @@ interface Pending {
 
 /** A worker that runs transformations one at a time. */
 export class Transformer {
-  private readonly file: string;
-  private worker: Worker | undefined;
+  private readonly spawn: Spawn;
+  private worker: WorkerHandle | undefined;
   private next = 0;
   private readonly pending = new Map<number, Pending>();
   /** Transformations run one after another, each with its own time. */
   private queue: Promise<unknown> = Promise.resolve();
 
-  /** `file` is the bundled worker, `transformer.js`. */
-  constructor(file: string) {
-    this.file = file;
+  constructor(spawn: Spawn) {
+    this.spawn = spawn;
   }
 
-  private start(): Worker {
+  private start(): WorkerHandle {
     if (this.worker) return this.worker;
-    // Deep stylesheets need a deep stack, in V8 as in the module.
-    const w = new Worker(this.file, { resourceLimits: { stackSizeMb: 256 } });
-    w.on("message", (m: { id: number; answer?: string; error?: string }) => {
-      if (m.answer === undefined) {
-        // The module trapped and cannot be trusted any more.
-        const error = m.error ?? "unknown error";
-        this.fail(
-          new Error(
-            /out of bounds|call stack/i.test(error)
-              ? "the stylesheet nests its calls too deeply and ran out of stack"
-              : `the transformation failed: ${error}`,
-          ),
-        );
-        return;
-      }
-      const p = this.pending.get(m.id);
-      this.pending.delete(m.id);
-      p?.resolve(m.answer);
+    const w: WorkerHandle = this.spawn({
+      message: (m) => this.received(m),
+      error: (e) => this.fail(e),
+      exit: () => {
+        if (this.worker === w) this.fail(new Error("the transformation stopped unexpectedly"));
+      },
     });
-    w.on("error", (e) => this.fail(e));
-    w.on("exit", () => {
-      if (this.worker === w) this.fail(new Error("the transformation stopped unexpectedly"));
-    });
-    w.unref();
     this.worker = w;
     return w;
+  }
+
+  private received(m: WorkerReply): void {
+    if (m.answer === undefined) {
+      // The module trapped and cannot be trusted any more.
+      const error = m.error ?? "unknown error";
+      this.fail(
+        new Error(
+          /out of bounds|call stack/i.test(error)
+            ? "the stylesheet nests its calls too deeply and ran out of stack"
+            : `the transformation failed: ${error}`,
+        ),
+      );
+      return;
+    }
+    const p = this.pending.get(m.id);
+    this.pending.delete(m.id);
+    p?.resolve(m.answer);
   }
 
   private fail(e: Error): void {
@@ -75,7 +75,7 @@ export class Transformer {
   stop(): void {
     const w = this.worker;
     this.worker = undefined;
-    void w?.terminate();
+    w?.terminate();
   }
 
   /** Runs one round, giving up after `timeout` milliseconds. */
@@ -96,7 +96,7 @@ export class Transformer {
           reject(e);
         },
       });
-      worker.postMessage({ id, request });
+      worker.post({ id, request });
     });
   }
 

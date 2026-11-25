@@ -12,6 +12,7 @@
   "categories": ["Programming Languages", "Linters"],
   "keywords": ["TEI", "XML", "RELAX NG", "Schematron", "XSD", "XSLT", "XQuery", "XPath", "digital humanities"],
   "main": "./out/client.js",
+  "browser": "./out/web/client.js",
   "activationEvents": ["onLanguage:xml", "onLanguage:xsl", "onLanguage:xquery"],
   "contributes": {
     "languages": [
