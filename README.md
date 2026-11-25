@@ -16,6 +16,7 @@ the extension as WebAssembly.
 | Download schemas named by `http(s)` address (such as the TEI schemas) once, and keep them | ✓ |
 | Check XSLT 3.0 stylesheets, with their includes and imports | ✓ |
 | Check XQuery 3.1 modules, with the library modules they import | ✓ |
+| Syntax colours for XQuery (VS Code has none of its own), including XML constructors and string templates | ✓ |
 | Suggestions from the schema while typing: child elements (with their required attributes), attributes, values, closing tags | ✓ |
 | Hovers with the schema's documentation (such as TEI's), attributes and allowed content | ✓ |
 | Run an XSLT 3.0 transformation on a document (**Transform with XSLT…**), with transforms saved in the workspace settings | ✓ |
