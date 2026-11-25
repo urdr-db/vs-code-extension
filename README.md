@@ -1,3 +1,5 @@
+![Urðr-XML: TEI, XSLT and XQuery checking for VS Code](splash.png)
+
 # Urðr-XML for VS Code
 
 A VS Code extension for digital humanities work with XML: it checks TEI
