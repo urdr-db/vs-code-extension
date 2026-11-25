@@ -78,9 +78,11 @@ transformation that runs longer than `urdr.transform.timeout` seconds
 
 ## Trying it
 
-Install a build (`urdr-xml-<version>.vsix`) with **Extensions → … →
-Install from VSIX…**, then open the [`examples`](examples) folder. Its
-README lists what each file should show.
+Download `urdr-xml-<version>.vsix` and `urdr-xml-examples.zip` from the
+[Releases](https://github.com/urdr-db/vs-code-extension/releases) page:
+a numbered release, or **dev** for the newest build of `main`. Install
+the `.vsix` with **Extensions → … → Install from VSIX…**, then open the
+unzipped `examples` folder. Its README lists what each file should show.
 
 ## How it is built
 
@@ -109,6 +111,20 @@ npx vsce package --no-dependencies
 ```
 
 Install the `.vsix` with **Extensions → … → Install from VSIX**.
+
+## Releasing
+
+Set the new version in `extension/package.json`, merge it, then tag that
+commit and push the tag:
+
+```sh
+git tag v0.3.0
+git push origin v0.3.0
+```
+
+CI builds and tests it, checks that the tag matches the version, and
+publishes `urdr-xml-0.3.0.vsix` with the examples on the Releases page.
+A version with a hyphen (`v0.3.0-beta.1`) is published as a pre-release.
 
 ## License
 
