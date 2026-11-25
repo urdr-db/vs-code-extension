@@ -145,7 +145,7 @@ export function register(context: vscode.ExtensionContext, client: () => Languag
 
   const showMessages = (answer: TransformAnswer, label: string) => {
     if (!answer.messages.length) return;
-    log.appendLine(`— ${label}, ${new Date().toLocaleTimeString()}`);
+    log.appendLine(`[${new Date().toLocaleTimeString()}] ${label}`);
     for (const m of answer.messages) log.appendLine(m);
   };
 

@@ -21,12 +21,8 @@ problems it found and the files it still needs (`needed`); the server
 reads those and asks again, until nothing new is needed
 (`extension/src/converse.ts`).
 
-An everyday picture: a proofreader at home with no library. They read the
-manuscript, write down which style guides it cites that they do not have,
-someone brings those, and they read it again.
-
-This keeps the same module usable in the browser (vscode.dev), where
-there is no disk.
+The core needs no disk or network of its own, so it could also run in
+the browser (vscode.dev). The extension itself is desktop-only for now.
 
 The server reads needed files from open editors first, then the disk,
 then the web for `http(s)` addresses (`extension/src/reader.ts`). Each
@@ -78,8 +74,9 @@ compile again.
 A transformation can take long, or never end. The server runs it in a
 worker thread (`extension/src/transformer.ts`, driven by
 `extension/src/transforms.ts`) and stops the worker when it takes longer
-than the time limit; the next transformation starts a new one. Stylesheets such as TEI's recurse deeply: the
-WebAssembly module gets a 64 MiB stack (`.cargo/config.toml`), the
+than the time limit; the next transformation starts a new one.
+
+Stylesheets such as TEI's recurse deeply: the WebAssembly module gets a 64 MiB stack (`.cargo/config.toml`), the
 worker a large V8 stack, and calls may nest 3,000 deep before the run
 stops with `urdr:LIMT0002`, short of where the stack would run out. If it
 runs out anyway, the worker is replaced and the error says so.
