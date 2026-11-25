@@ -18,6 +18,7 @@ import { check, outline, validate, type Kind } from "./core.ts";
 import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
 import { hover, Index, suggest } from "./suggest.ts";
+import { tagNames } from "./elements.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { makeReader, type Settings } from "./reader.ts";
@@ -41,6 +42,8 @@ export function serve(connection: Connection, platform: Platform): void {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         completionProvider: { triggerCharacters: ["<", "/", " ", '"', "'", ":"] },
         hoverProvider: true,
+        renameProvider: { prepareProvider: true },
+        linkedEditingRangeProvider: true,
       },
     };
   });
@@ -254,6 +257,47 @@ export function serve(connection: Connection, platform: Platform): void {
       contents: { kind: MarkupKind.Markdown, value: h.markdown },
       range: { start: doc.positionAt(h.start), end: doc.positionAt(h.end) },
     };
+  });
+
+  // Renaming an element renames its end tag too.
+  const markup = (uri: string) => {
+    const doc = documents.get(uri);
+    const kind = doc && kindOf(doc);
+    return kind === "xml" || kind === "xslt" ? doc : undefined;
+  };
+  const namesAt = (uri: string, position: { line: number; character: number }) => {
+    const doc = markup(uri);
+    if (!doc) return undefined;
+    const ranges = tagNames(doc.getText(), doc.offsetAt(position));
+    return ranges?.map((r) => ({ start: doc.positionAt(r.start), end: doc.positionAt(r.end) }));
+  };
+  connection.onPrepareRename((params) => namesAt(params.textDocument.uri, params.position)?.find((r) => r.start.line === params.position.line && r.start.character <= params.position.character && params.position.character <= r.end.character) ?? null);
+  connection.onRenameRequest((params) => {
+    const ranges = namesAt(params.textDocument.uri, params.position);
+    if (!ranges) return null;
+    return { changes: { [params.textDocument.uri]: ranges.map((range) => ({ range, newText: params.newName })) } };
+  });
+  connection.languages.onLinkedEditingRange((params) => {
+    const ranges = namesAt(params.textDocument.uri, params.position);
+    return ranges && ranges.length > 1 ? { ranges, wordPattern: "[^\\s<>/\"'=]+" } : null;
+  });
+
+  // The elements allowed at an offset, for "Surround with Tags": what the
+  // schema would suggest after a "<" typed there.
+  connection.onRequest("urdr/elementsAt", async (params: { uri: string; offset: number }) => {
+    const doc = markup(params.uri);
+    if (!doc) return [];
+    const index = await indexFor(doc).catch(() => undefined);
+    if (!index) return [];
+    const text = doc.getText();
+    const typed = text.slice(0, params.offset) + "<" + text.slice(params.offset);
+    return suggest(typed, params.offset + 1, index)
+      .filter((s) => s.kind === "element")
+      .map((s) => ({
+        name: s.label,
+        required: [...s.insert.matchAll(/ ([^\s=]+)="\$\d+"/g)].map((m) => m[1]!),
+        detail: s.detail,
+      }));
   });
 
   // XSLT transformations, for the "Transform with XSLT" command and the
