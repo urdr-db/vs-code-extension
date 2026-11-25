@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Element actions as in Oxygen XML Editor, with its keys: Surround with
   Tags (`Ctrl+E`, with the schema's choices), Surround with the Last Tag
