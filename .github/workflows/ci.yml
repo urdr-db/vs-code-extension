@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  # The Urðr crates come from a private repository, read with a deploy key
+  # (secret URDR_DEPLOY_KEY): git, not cargo's own client, does the fetch.
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.URDR_DEPLOY_KEY }}
+      - name: Read dh--urdr over SSH
+        run: git config --global url."ssh://git@github.com/silencesys/dh--urdr".insteadOf "https://github.com/silencesys/dh--urdr"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.100.0"
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.130
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - name: Rust format
+        run: cargo fmt --all -- --check
+      - name: Rust lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Rust tests
+        run: cargo test --workspace
+      - name: Install
+        working-directory: extension
+        run: npm ci
+      - name: Build (WebAssembly, type check, bundle)
+        working-directory: extension
+        run: npm run build
+      - name: Extension tests
+        working-directory: extension
+        run: npm test
+      - name: Package
+        working-directory: extension
+        run: npx vsce package --no-dependencies -o urdr-xml.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: urdr-xml-vsix
+          path: extension/urdr-xml.vsix

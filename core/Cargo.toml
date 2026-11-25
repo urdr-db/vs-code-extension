@@ -1,0 +1,24 @@
+[package]
+name = "urdr-vscode-core"
+description = "The checks the Urðr VS Code extension runs, compiled to WebAssembly: schema validation, XQuery and XSLT checking."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+# cdylib for the WebAssembly module, rlib for the tests.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+urdr-validate-wasm.workspace = true
+urdr-xq-analyze.workspace = true
+urdr-xq-syntax.workspace = true
+urdr-xslt.workspace = true
+serde_json.workspace = true
+wasm-bindgen.workspace = true

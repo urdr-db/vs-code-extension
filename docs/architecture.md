@@ -1,0 +1,50 @@
+# Architecture
+
+## The pieces
+
+- **The client** (`extension/src/client.ts`) is what VS Code loads. It
+  starts the language server and passes it the settings.
+- **The language server** (`extension/src/server.ts`) runs in its own
+  Node process, so long checks never slow down the editor. It watches the
+  open documents and publishes what it finds as diagnostics, through the
+  Language Server Protocol (LSP), which other editors speak too.
+- **The core** (`core/`) is a Rust crate built on the Urðr crates,
+  compiled to WebAssembly. The server loads it once and calls it for
+  every check.
+
+## Checks are conversations
+
+The core never reads files or the network. Every check is a conversation,
+as in Urðr Studio's offline validator: the server passes the text and
+every related file it has read so far; the core answers with the
+problems it found and the files it still needs (`needed`); the server
+reads those and asks again, until nothing new is needed
+(`extension/src/converse.ts`).
+
+An everyday picture: a proofreader at home with no library. They read the
+manuscript, write down which style guides it cites that they do not have,
+someone brings those, and they read it again.
+
+This keeps the same module usable in the browser (vscode.dev), where
+there is no disk.
+
+The server reads needed files from open editors first, then the disk,
+then the web for `http(s)` addresses (`extension/src/reader.ts`). Each
+download is kept in the extension's storage, so the TEI schemas are
+fetched once.
+
+## Placing problems
+
+The validators report where a problem is as a path, such as
+`/Q{http://www.tei-c.org/ns/1.0}TEI[1]/…/p[1]/@rend`. The server finds
+that node in the text (`extension/src/locate.ts`, ported from Studio) and
+marks the element's or attribute's name. Query and stylesheet errors come
+with byte offsets or line and column, converted to VS Code's positions in
+`extension/src/positions.ts`.
+
+## Where the Urðr code comes from
+
+The core depends on the Urðr crates by git, pinned in the workspace
+`Cargo.toml`. Move every pin together. The extension never needs changes
+to the Urðr database; where the crates need something, that goes to
+dh--urdr as its own pull request first.

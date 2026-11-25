@@ -1,0 +1,66 @@
+{
+  "name": "urdr-xml",
+  "displayName": "Urðr XML: TEI, XSLT and XQuery",
+  "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, and checks XSLT, XQuery and XPath, with Urðr's own engine. No server, no Java.",
+  "version": "0.1.0",
+  "publisher": "urdr-db",
+  "license": "MPL-2.0",
+  "repository": { "type": "git", "url": "https://github.com/urdr-db/vs-code-extension" },
+  "engines": { "vscode": "^1.95.0" },
+  "categories": ["Programming Languages", "Linters"],
+  "keywords": ["TEI", "XML", "RELAX NG", "Schematron", "XSD", "XSLT", "XQuery", "XPath", "digital humanities"],
+  "main": "./out/client.js",
+  "activationEvents": ["onLanguage:xml", "onLanguage:xsl", "onLanguage:xquery"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "xquery",
+        "aliases": ["XQuery", "xquery"],
+        "extensions": [".xq", ".xql", ".xqm", ".xqy", ".xquery"]
+      },
+      {
+        "id": "xml",
+        "extensions": [".tei", ".odd", ".rng", ".sch"]
+      }
+    ],
+    "configuration": {
+      "title": "Urðr XML",
+      "properties": {
+        "urdr.validation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check XML documents against the schemas they name (xml-model, xsi:schemaLocation, DOCTYPE)."
+        },
+        "urdr.validation.fetchRemoteSchemas": {
+          "type": "boolean",
+          "default": true,
+          "description": "Download schemas that documents name by http(s) address, such as the TEI schemas on tei-c.org. Downloads are kept, so each is read once."
+        },
+        "urdr.checkDelay": {
+          "type": "number",
+          "default": 400,
+          "minimum": 0,
+          "description": "Milliseconds to wait after typing stops before checking."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "wasm": "node scripts/build-wasm.mjs",
+    "bundle": "node scripts/bundle.mjs",
+    "build": "npm run wasm && npm run typecheck && npm run bundle",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.mts",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "~1.95.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  }
+}
