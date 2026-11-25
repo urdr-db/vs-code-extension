@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_lite.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-stylesheet type="text/xsl" href="../xslt/tei-to-html.xsl"?>
 <!-- A TEI Lite letter. The schema is read from tei-c.org the first time
      (once; it is kept afterwards). Two problems to find:
      1. <persName> is not part of TEI Lite (use <name type="person">);

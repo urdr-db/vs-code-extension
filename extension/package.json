@@ -1,7 +1,7 @@
 {
   "name": "urdr-xml",
   "displayName": "Urðr-XML",
-  "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, and checks XSLT, XQuery and XPath, with Urðr's own engine. No server, no Java.",
+  "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, checks XSLT, XQuery and XPath, suggests what the schema allows, and runs and previews XSLT, with Urðr's own engine. No server, no Java.",
   "version": "0.1.0",
   "publisher": "urdr-db",
   "icon": "media/icon.png",
@@ -43,8 +43,86 @@
           "default": 400,
           "minimum": 0,
           "description": "Milliseconds to wait after typing stops before checking."
+        },
+        "urdr.transforms": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "markdownDescription": "Saved XSLT transforms, for **Transform with XSLT…** and the preview. Paths are relative to the workspace folder. `output` may use `${fileBasenameNoExtension}`, `${fileDirname}` and `${workspaceFolder}`.",
+          "items": {
+            "type": "object",
+            "required": ["stylesheet"],
+            "properties": {
+              "name": { "type": "string", "description": "Shown when choosing a transform." },
+              "stylesheet": { "type": "string", "description": "The stylesheet, such as xslt/tei-to-html.xsl." },
+              "source": {
+                "type": "string",
+                "description": "The documents it applies to, as a glob such as tei/**/*.xml. Leave out for a stylesheet that runs without a source."
+              },
+              "output": {
+                "type": "string",
+                "description": "Where to write the result, such as html/${fileBasenameNoExtension}.html. Without it the result opens in a new editor."
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": { "type": "string" },
+                "description": "Stylesheet parameters by name (local or Q{uri}local)."
+              },
+              "initialTemplate": { "type": "string", "description": "The named template to start at." },
+              "initialMode": { "type": "string", "description": "The mode to apply templates in." }
+            }
+          }
+        },
+        "urdr.transform.timeout": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "description": "Seconds a transformation may run before it is stopped."
         }
       }
+    },
+    "commands": [
+      {
+        "command": "urdr.transform",
+        "title": "Transform with XSLT…",
+        "category": "Urðr-XML",
+        "icon": "$(run)"
+      },
+      {
+        "command": "urdr.preview",
+        "title": "Open XSLT Preview to the Side",
+        "category": "Urðr-XML",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "urdr.preview",
+          "when": "resourceLangId == xml || resourceLangId == xsl",
+          "group": "navigation"
+        }
+      ],
+      "editor/title/context": [
+        { "command": "urdr.transform", "when": "resourceLangId == xml || resourceLangId == xsl" },
+        { "command": "urdr.preview", "when": "resourceLangId == xml || resourceLangId == xsl" }
+      ],
+      "explorer/context": [
+        {
+          "command": "urdr.transform",
+          "when": "resourceLangId == xml || resourceLangId == xsl",
+          "group": "urdr"
+        },
+        {
+          "command": "urdr.preview",
+          "when": "resourceLangId == xml || resourceLangId == xsl",
+          "group": "urdr"
+        }
+      ],
+      "commandPalette": [
+        { "command": "urdr.transform", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.preview", "when": "editorLangId == xml || editorLangId == xsl" }
+      ]
     }
   },
   "scripts": {

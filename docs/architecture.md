@@ -64,3 +64,27 @@ text) is read from the text before it (`extension/src/context.ts`).
 Documentation comes from the schema texts themselves: RELAX NG's
 `a:documentation`, as the TEI schemas carry, and XSD's
 `xs:documentation` (`extension/src/docs.ts`).
+
+## Transformations and the preview
+
+The core runs a stylesheet as Urðr's transform request does
+(`core/src/transform.rs`), as a conversation too: besides included and
+imported modules, the documents `doc()` and `unparsed-text()` read are
+reported as needed. WebAssembly has no clock, so the server passes the
+time for `current-dateTime()`. The core keeps the last few compiled
+stylesheets, so a preview that runs again as the source changes does not
+compile again.
+
+A transformation can take long, or never end. The server runs it in a
+worker thread (`extension/src/transformer.ts`, driven by
+`extension/src/transforms.ts`) and stops the worker when it takes longer
+than the time limit; the next transformation starts a new one. The
+WebAssembly module gets a 16 MiB stack (`.cargo/config.toml`), since
+stylesheets such as TEI's recurse deeply.
+
+The extension side (`extension/src/commands.ts`) picks the stylesheet,
+asks the server with the `urdr/transform` request, and writes the results
+or shows them. The preview is a webview with scripts off, allowed to load
+only files from the workspace and the document's folder; its page
+(`extension/src/preview-html.ts`) adds a content security policy and a
+`<base>` so relative links and pictures resolve next to the document.
