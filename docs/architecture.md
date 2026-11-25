@@ -48,3 +48,19 @@ The core depends on the Urðr crates by git, pinned in the workspace
 `Cargo.toml`. Move every pin together. The extension never needs changes
 to the Urðr database; where the crates need something, that goes to
 dh--urdr as its own pull request first.
+
+## Suggestions and hovers
+
+For an XML document, the server finds the schemas it names from its
+prolog and root start tag with patterns (`extension/src/hints.ts`), so
+suggestions keep working while the document is half typed. The core
+reads those schemas into an outline (`core/src/outline.rs`, the same
+outline Studio suggests from): for each element, its children,
+attributes and their values. The outline of the last schema set is kept,
+so a grammar as large as `tei_all.rng` is read once.
+
+Where the cursor is (after `<`, inside a start tag, inside quotes, in
+text) is read from the text before it (`extension/src/context.ts`).
+Documentation comes from the schema texts themselves: RELAX NG's
+`a:documentation`, as the TEI schemas carry, and XSD's
+`xs:documentation` (`extension/src/docs.ts`).

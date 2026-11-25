@@ -16,7 +16,8 @@ the extension as WebAssembly.
 | Download schemas named by `http(s)` address (such as the TEI schemas) once, and keep them | ✓ |
 | Check XSLT 3.0 stylesheets, with their includes and imports | ✓ |
 | Check XQuery 3.1 modules, with the library modules they import | ✓ |
-| Suggestions and hovers from the schema while typing | planned |
+| Suggestions from the schema while typing: child elements (with their required attributes), attributes, values, closing tags | ✓ |
+| Hovers with the schema's documentation (such as TEI's), attributes and allowed content | ✓ |
 | TEI ODD files as schemas (compiled with the TEI stylesheets on Urðr's XSLT engine) | planned |
 | Run an XSLT transformation, saved transforms, live preview to the side | planned |
 

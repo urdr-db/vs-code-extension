@@ -12,8 +12,9 @@ const ROUNDS = 25;
 export async function converse<T extends { needed?: string[] }>(
   check: (files: Record<string, string>) => T,
   read: Reader,
+  /** Filled with every file read, for callers that want the texts. */
+  files: Record<string, string> = {},
 ): Promise<T> {
-  const files: Record<string, string> = {};
   const tried = new Set<string>();
   let answer = check(files);
   for (let round = 0; round < ROUNDS; round++) {

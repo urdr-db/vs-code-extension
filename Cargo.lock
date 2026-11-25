@@ -725,6 +725,9 @@ version = "0.1.0"
 dependencies = [
  "serde_json",
  "urdr-validate-wasm",
+ "urdr-xdm",
+ "urdr-xml-parse",
+ "urdr-xml-validate",
  "urdr-xq-analyze",
  "urdr-xq-syntax",
  "urdr-xslt",

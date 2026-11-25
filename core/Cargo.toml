@@ -17,6 +17,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 urdr-validate-wasm.workspace = true
+urdr-xdm.workspace = true
+urdr-xml-parse.workspace = true
+urdr-xml-validate.workspace = true
 urdr-xq-analyze.workspace = true
 urdr-xq-syntax.workspace = true
 urdr-xslt.workspace = true
