@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Element actions as in Oxygen XML Editor, with its keys: Surround with
   Tags (`Ctrl+E`, with the schema's choices), Surround with the Last Tag
   (`Ctrl+/`), Delete Element Tags, Split Element, Join Elements, and
   Rename Element (`F2`), which renames the end tag too. The setting
   `urdr.oxygenShortcuts` turns the keys off.
+- Faster XSLT, from the latest Urðr engine: the example ODD compiles in
+  about 10 seconds instead of 23, and transformations run faster too.
 
 ## 0.4.0
 
