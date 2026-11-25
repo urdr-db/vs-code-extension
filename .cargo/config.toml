@@ -1,4 +1,4 @@
 # Stylesheets such as the TEI ones recurse deeply: give the WebAssembly
-# module a 16 MiB stack instead of the default 1 MiB.
+# module a 64 MiB stack instead of the default 1 MiB.
 [target.wasm32-unknown-unknown]
-rustflags = ["-C", "link-arg=-zstack-size=16777216"]
+rustflags = ["-C", "link-arg=-zstack-size=67108864"]

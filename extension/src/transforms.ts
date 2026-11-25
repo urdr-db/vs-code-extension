@@ -26,6 +26,8 @@ export class Transformer {
   private worker: Worker | undefined;
   private next = 0;
   private readonly pending = new Map<number, Pending>();
+  /** Transformations run one after another, each with its own time. */
+  private queue: Promise<unknown> = Promise.resolve();
 
   /** `file` is the bundled worker, `transformer.js`. */
   constructor(file: string) {
@@ -34,11 +36,19 @@ export class Transformer {
 
   private start(): Worker {
     if (this.worker) return this.worker;
-    const w = new Worker(this.file);
+    // Deep stylesheets need a deep stack, in V8 as in the module.
+    const w = new Worker(this.file, { resourceLimits: { stackSizeMb: 256 } });
     w.on("message", (m: { id: number; answer?: string; error?: string }) => {
       if (m.answer === undefined) {
         // The module trapped and cannot be trusted any more.
-        this.fail(new Error(`the transformation failed: ${m.error ?? "unknown error"}`));
+        const error = m.error ?? "unknown error";
+        this.fail(
+          new Error(
+            /out of bounds|call stack/i.test(error)
+              ? "the stylesheet nests its calls too deeply and ran out of stack"
+              : `the transformation failed: ${error}`,
+          ),
+        );
         return;
       }
       const p = this.pending.get(m.id);
@@ -90,9 +100,15 @@ export class Transformer {
     });
   }
 
-  /** Runs a transformation, reading what it needs with `read`. The time
-   * limit applies to the whole run. */
-  async transform(params: TransformParams, read: Reader, timeout: number): Promise<TransformAnswer> {
+  /** Runs a transformation, reading what it needs with `read`, once the
+   * ones before it are done. The time limit applies to the whole run. */
+  transform(params: TransformParams, read: Reader, timeout: number): Promise<TransformAnswer> {
+    const run = this.queue.then(() => this.transformNow(params, read, timeout));
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async transformNow(params: TransformParams, read: Reader, timeout: number): Promise<TransformAnswer> {
     const problem = (message: string, uri?: string): TransformAnswer => ({
       results: [],
       messages: [],

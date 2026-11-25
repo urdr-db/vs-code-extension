@@ -20,10 +20,28 @@ the extension as WebAssembly.
 | Hovers with the schema's documentation (such as TEI's), attributes and allowed content | ✓ |
 | Run an XSLT 3.0 transformation on a document (**Transform with XSLT…**), with transforms saved in the workspace settings | ✓ |
 | Live preview of a transformation to the side, as for Markdown, updated as you type | ✓ |
-| TEI ODD files as schemas (compiled with the TEI stylesheets on Urðr's XSLT engine) | planned |
+| TEI ODD files as schemas: a document whose `<?xml-model?>` names an `.odd` is checked against the RELAX NG and Schematron it compiles to | ✓ |
 
 A file passes or fails the same way here as in Urðr and in Urðr Studio:
 all three run the same validators.
+
+## TEI ODD files
+
+Name the ODD itself as the schema:
+
+```xml
+<?xml-model href="myproject.odd" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+```
+
+The extension compiles it with the TEI stylesheets (odd2odd and
+odd2relax, which ship with it, as does the TEI P5 source they compile
+against) on Urðr's XSLT engine, and checks the document against the
+schema, its Schematron rules included. Suggestions and hovers come from
+it too. Compiling takes from seconds to a few minutes the first time,
+with a progress note; the result is kept until the ODD changes.
+**Urðr-XML: Compile ODD to RELAX NG** (right-click an `.odd`) saves the
+schema as a file. `urdr.odd.source` points at another TEI source
+(`p5subset.xml`) when an ODD needs a different TEI version.
 
 ## Transforming with XSLT
 

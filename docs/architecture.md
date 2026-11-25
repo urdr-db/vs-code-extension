@@ -78,9 +78,11 @@ compile again.
 A transformation can take long, or never end. The server runs it in a
 worker thread (`extension/src/transformer.ts`, driven by
 `extension/src/transforms.ts`) and stops the worker when it takes longer
-than the time limit; the next transformation starts a new one. The
-WebAssembly module gets a 16 MiB stack (`.cargo/config.toml`), since
-stylesheets such as TEI's recurse deeply.
+than the time limit; the next transformation starts a new one. Stylesheets such as TEI's recurse deeply: the
+WebAssembly module gets a 64 MiB stack (`.cargo/config.toml`), the
+worker a large V8 stack, and calls may nest 3,000 deep before the run
+stops with `urdr:LIMT0002`, short of where the stack would run out. If it
+runs out anyway, the worker is replaced and the error says so.
 
 The extension side (`extension/src/commands.ts`) picks the stylesheet,
 asks the server with the `urdr/transform` request, and writes the results
@@ -88,3 +90,19 @@ or shows them. The preview is a webview with scripts off, allowed to load
 only files from the workspace and the document's folder; its page
 (`extension/src/preview-html.ts`) adds a content security policy and a
 `<base>` so relative links and pictures resolve next to the document.
+
+## ODD files
+
+When a document's `<?xml-model?>` names an ODD, the server replaces that
+instruction, before checking, with one that names a made-up URI,
+`urdr-odd:rng:<the ODD's URI>` (`extension/src/odd.ts`). When the
+validator or the outline asks for that URI, the reader compiles the ODD
+instead of reading a file: odd2odd merges it with the TEI source, and
+odd2relax turns the result into RELAX NG, both through the same worker
+as other transformations. The RELAX NG carries the ODD's Schematron rules
+embedded, as Urðr's validator reads them. The schema is kept in memory
+and in the extension's storage under a hash of the ODD's text, the TEI
+stylesheets' version and the TEI source, so an ODD compiles once.
+
+The stylesheets and `p5subset.xml` ship in `extension/tei-stylesheets/`
+(see its README), so ODDs compile offline.
