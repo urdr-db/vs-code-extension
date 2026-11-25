@@ -18,12 +18,16 @@
       {
         "id": "xquery",
         "aliases": ["XQuery", "xquery"],
-        "extensions": [".xq", ".xql", ".xqm", ".xqy", ".xquery"]
+        "extensions": [".xq", ".xql", ".xqm", ".xqy", ".xquery"],
+        "configuration": "./syntaxes/xquery.language-configuration.json"
       },
       {
         "id": "xml",
         "extensions": [".tei", ".odd", ".rng", ".sch"]
       }
+    ],
+    "grammars": [
+      { "language": "xquery", "scopeName": "source.xquery", "path": "./syntaxes/xquery.tmLanguage.json" }
     ],
     "configuration": {
       "title": "Urðr-XML",
@@ -153,6 +157,8 @@
     "typescript": "^5.6.0",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.2.0"
   }
 }
