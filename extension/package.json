@@ -83,6 +83,11 @@
           "default": "",
           "markdownDescription": "The TEI source that ODD files compile against (`p5subset.xml`), as a path or URL. Empty uses the one that ships with the extension (TEI P5 4.12.0)."
         },
+        "urdr.oxygenShortcuts": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Give the element actions Oxygen XML Editor's keys in XML editors: Surround with Tags (`Ctrl+E`), Surround with the Last Tag (`Ctrl+/`), Delete Element Tags (`Alt+Shift+X`), Split Element (`Alt+Shift+D`), Join Elements (`Alt+Shift+J`). They replace VS Code's own uses of these keys there. Off, the actions are still in the Command Palette."
+        },
         "urdr.transform.timeout": {
           "type": "number",
           "default": 60,
@@ -92,6 +97,36 @@
       }
     },
     "commands": [
+      {
+        "command": "urdr.surroundWithTags",
+        "title": "Surround with Tags…",
+        "category": "Urðr-XML"
+      },
+      {
+        "command": "urdr.surroundWithLastTag",
+        "title": "Surround with the Last Tag",
+        "category": "Urðr-XML"
+      },
+      {
+        "command": "urdr.deleteElementTags",
+        "title": "Delete Element Tags",
+        "category": "Urðr-XML"
+      },
+      {
+        "command": "urdr.splitElement",
+        "title": "Split Element",
+        "category": "Urðr-XML"
+      },
+      {
+        "command": "urdr.joinElements",
+        "title": "Join Elements",
+        "category": "Urðr-XML"
+      },
+      {
+        "command": "urdr.renameElement",
+        "title": "Rename Element",
+        "category": "Urðr-XML"
+      },
       {
         "command": "urdr.transform",
         "title": "Transform with XSLT…",
@@ -109,6 +144,13 @@
         "category": "Urðr-XML",
         "icon": "$(open-preview)"
       }
+    ],
+    "keybindings": [
+      { "command": "urdr.surroundWithTags", "key": "ctrl+e", "mac": "cmd+e", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.surroundWithLastTag", "key": "ctrl+/", "mac": "cmd+/", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.deleteElementTags", "key": "alt+shift+x", "mac": "cmd+alt+x", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.splitElement", "key": "alt+shift+d", "mac": "ctrl+alt+d", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.joinElements", "key": "alt+shift+j", "mac": "cmd+alt+j", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" }
     ],
     "menus": {
       "editor/title": [
@@ -136,6 +178,12 @@
         }
       ],
       "commandPalette": [
+        { "command": "urdr.surroundWithTags", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.surroundWithLastTag", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.deleteElementTags", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.splitElement", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.joinElements", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.renameElement", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.compileOdd", "when": "resourceExtname == .odd" },
         { "command": "urdr.transform", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.preview", "when": "editorLangId == xml || editorLangId == xsl" }

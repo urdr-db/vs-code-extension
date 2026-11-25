@@ -56,6 +56,25 @@ closing tag. Hovering over an element or attribute shows the schema's
 documentation for it, such as the TEI Guidelines' description, along
 with its attributes and what it may contain.
 
+## Editing elements
+
+These actions work as in Oxygen XML Editor, with Oxygen's keys in XML
+and XSLT files. Each is also in the Command Palette under **Urðr-XML**.
+
+| Action | Windows, Linux | macOS |
+|---|---|---|
+| **Surround with Tags…**: wraps the selection in an element, choosing from those the schema allows there, or typing any name | `Ctrl+E` | `Cmd+E` |
+| **Surround with the Last Tag** | `Ctrl+/` | `Cmd+/` |
+| **Delete Element Tags**: removes the tags around the caret, keeping the content | `Alt+Shift+X` | `Cmd+Option+X` |
+| **Split Element** at the caret, into two with the same attributes (but not the same id) | `Alt+Shift+D` | `Ctrl+Option+D` |
+| **Join Elements**: joins the two elements on either side of the caret, when they have the same name and attributes | `Alt+Shift+J` | `Cmd+Option+J` |
+| **Rename Element**: renames the start and end tag together | `F2` | `F2` |
+
+In XML files these keys replace VS Code's own: `Ctrl+E` (Quick Open)
+and `Ctrl+/` (comment lines; `Ctrl+K Ctrl+C` still comments). To keep
+VS Code's keys, turn off `urdr.oxygenShortcuts`; the actions stay in the
+Command Palette.
+
 ## TEI ODD files
 
 A document can name an ODD as its schema:
@@ -129,6 +148,7 @@ output. `xsl:message` output goes to the **Urðr-XML: XSLT** output panel.
 | `urdr.checkDelay` | `400` | Milliseconds to wait after typing stops before checking. |
 | `urdr.transforms` | `[]` | Saved XSLT transforms (see above). |
 | `urdr.transform.timeout` | `60` | Seconds a transformation may run before it is stopped. |
+| `urdr.oxygenShortcuts` | `true` | Oxygen's keys for the element actions. |
 | `urdr.odd.source` | | The `p5subset.xml` that ODDs compile against. Empty uses the bundled TEI P5 4.12.0. |
 
 ## Limitations
