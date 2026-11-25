@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Element actions as in Oxygen XML Editor, with its keys: Surround with
+  Tags (`Ctrl+E`, with the schema's choices), Surround with the Last Tag
+  (`Ctrl+/`), Delete Element Tags, Split Element, Join Elements, and
+  Rename Element (`F2`), which renames the end tag too. The setting
+  `urdr.oxygenShortcuts` turns the keys off.
+
 ## 0.4.0
 
 - Runs in VS Code for the Web (vscode.dev, github.dev): checks,

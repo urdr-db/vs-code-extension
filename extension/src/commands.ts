@@ -4,6 +4,7 @@
 import * as vscode from "vscode";
 import type { BaseLanguageClient } from "vscode-languageclient";
 import type { TransformAnswer } from "./core.ts";
+import { registerEditing } from "./editing.ts";
 import { describe, expand, previewPage, stylesheetHref } from "./preview-html.ts";
 import type { TransformParams } from "./transforms.ts";
 
@@ -134,6 +135,7 @@ async function save(choice: Choice): Promise<void> {
 }
 
 export function register(context: vscode.ExtensionContext, client: () => BaseLanguageClient | undefined): void {
+  registerEditing(context, client);
   const log = vscode.window.createOutputChannel("Urðr-XML: XSLT");
   context.subscriptions.push(log);
 
