@@ -125,7 +125,11 @@ git push origin v0.3.0
 
 CI builds and tests it, checks that the tag matches the version, and
 publishes `urdr-xml-0.3.0.vsix` with the examples on the Releases page.
-A version with a hyphen (`v0.3.0-beta.1`) is published as a pre-release.
+It also publishes to the Visual Studio Marketplace when the repository
+has the secret `VSCE_PAT` (a token for the publisher `urdr-db`), and to
+Open VSX when it has `OVSX_PAT`. A version with a hyphen
+(`v0.3.0-beta.1`) is published as a pre-release on GitHub only. Add a
+section to `CHANGELOG.md` for each version: the Marketplace shows it.
 
 ## License
 
