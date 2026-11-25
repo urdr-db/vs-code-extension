@@ -13,7 +13,8 @@ Urðr server.
 ## Getting started
 
 Install **Urðr-XML** from the Extensions view, then open an XML file that
-names its schema. Problems show up in the editor and in the **Problems**
+names its schema. It works in desktop VS Code and in VS Code for the Web
+(vscode.dev and github.dev). Problems show up in the editor and in the **Problems**
 panel.
 
 The [examples folder](examples) has a document for each feature, and its
@@ -132,7 +133,9 @@ output. `xsl:message` output goes to the **Urðr-XML: XSLT** output panel.
 
 ## Limitations
 
-- It runs in desktop VS Code only, not in vscode.dev.
+- In VS Code for the Web (vscode.dev, github.dev), schemas named by web
+  address download only from sites that let browser pages read them
+  (CORS). Schemas in the workspace always work.
 - `collection()` and `uri-collection()` aren't available in transformations.
 
 ## Reporting problems

@@ -5,10 +5,8 @@
 // rules come embedded in that schema, and the validator checks them
 // too. Compiling takes a while, so each result is kept by the ODD's
 // text.
-import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import type { Reader } from "./converse.ts";
+import { sha256, type Store } from "./platform.ts";
 import { describe } from "./preview-html.ts";
 import type { Transformer } from "./transforms.ts";
 
@@ -62,11 +60,11 @@ export interface CompiledOdd {
 
 export interface OddOptions {
   /** The TEI stylesheets folder, as a URI ending in `/`. */
-  stylesheets: string;
+  stylesheets: () => string;
   /** The TEI source (`p5subset.xml`) to compile against, as a URI. */
   source: () => string;
   /** Where compiled ODDs are kept between sessions. */
-  cacheDir: () => string | undefined;
+  store?: Store;
   /** Called when a compile starts; the function it returns, when it ends. */
   started?: (odd: string) => () => void;
 }
@@ -89,10 +87,8 @@ export class OddCompiler {
   async compile(odd: string, read: Reader): Promise<CompiledOdd> {
     const text = await read(odd).catch(() => undefined);
     if (text === undefined) throw new Error(`The ODD ${odd} cannot be read.`);
-    const version = await read(new URL("VERSION", this.options.stylesheets).href).catch(() => "");
-    const key = createHash("sha256")
-      .update(`${version}\n${this.options.source()}\n${odd}\n${text}`)
-      .digest("hex");
+    const version = await read(new URL("VERSION", this.options.stylesheets()).href).catch(() => "");
+    const key = await sha256(`${version}\n${this.options.source()}\n${odd}\n${text}`);
     let p = this.kept.get(key);
     if (!p) {
       p = this.fromDisk(key).then((kept) => kept ?? this.run(odd, text, read, key));
@@ -103,16 +99,14 @@ export class OddCompiler {
   }
 
   private async fromDisk(key: string): Promise<CompiledOdd | undefined> {
-    const dir = this.options.cacheDir();
-    if (!dir) return undefined;
-    const kept = await readFile(join(dir, `${key}.json`), "utf8").catch(() => undefined);
+    const kept = await this.options.store?.get(`${key}.json`).catch(() => undefined);
     return kept ? (JSON.parse(kept) as CompiledOdd) : undefined;
   }
 
   private async run(odd: string, text: string, read: Reader, key: string): Promise<CompiledOdd> {
     const done = this.options.started?.(odd);
     try {
-      const sheet = (name: string) => new URL(`odds/${name}.xsl`, this.options.stylesheets).href;
+      const sheet = (name: string) => new URL(`odds/${name}.xsl`, this.options.stylesheets()).href;
       const step = async (name: string, source: string, r: Reader, parameters: Record<string, string> = {}) => {
         const answer = await this.transformer.transform({ stylesheet: sheet(name), source, parameters }, r, STEP_TIMEOUT);
         const result = answer.results[0];
@@ -128,11 +122,7 @@ export class OddCompiler {
       const at = odd.replace(/(\.odd)?$/i, ".compiled.odd");
       const withCompiled: Reader = async (u) => (u === at ? compiled : read(u));
       const out = { rng: await step("odd2relax", at, withCompiled) };
-      const dir = this.options.cacheDir();
-      if (dir) {
-        await mkdir(dir, { recursive: true });
-        await writeFile(join(dir, `${key}.json`), JSON.stringify(out), "utf8");
-      }
+      await this.options.store?.set(`${key}.json`, JSON.stringify(out)).catch(() => undefined);
       return out;
     } finally {
       done?.();

@@ -2,7 +2,7 @@
 // language server runs the transformations; this side picks the
 // stylesheet, writes or shows the results, and keeps the preview fresh.
 import * as vscode from "vscode";
-import type { LanguageClient } from "vscode-languageclient/node";
+import type { BaseLanguageClient } from "vscode-languageclient";
 import type { TransformAnswer } from "./core.ts";
 import { describe, expand, previewPage, stylesheetHref } from "./preview-html.ts";
 import type { TransformParams } from "./transforms.ts";
@@ -133,7 +133,7 @@ async function save(choice: Choice): Promise<void> {
   void vscode.window.showInformationMessage("Saved in the workspace settings as urdr.transforms. Add \"output\" there to write the result to a file.");
 }
 
-export function register(context: vscode.ExtensionContext, client: () => LanguageClient | undefined): void {
+export function register(context: vscode.ExtensionContext, client: () => BaseLanguageClient | undefined): void {
   const log = vscode.window.createOutputChannel("Urðr-XML: XSLT");
   context.subscriptions.push(log);
 
