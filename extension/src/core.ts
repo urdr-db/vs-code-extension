@@ -1,8 +1,10 @@
 // The Rust core, compiled to WebAssembly, and the checks it runs.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { initSync, validateDocument, checkXquery, checkXpath, checkXslt } from "../wasm/urdr_vscode_core.js";
+import { initSync, validateDocument, checkXquery, checkXpath, checkXslt, schemaOutline } from "../wasm/urdr_vscode_core.js";
 import { converse, type Reader } from "./converse.ts";
+import type { SchemaHint } from "./hints.ts";
+import type { Outline } from "./suggest.ts";
 
 let loaded = false;
 
@@ -69,4 +71,20 @@ export function validate(uri: string, text: string, read: Reader): Promise<Repor
     (files) => JSON.parse(validateDocument(JSON.stringify({ document: text, base: uri, files }))) as Report,
     read,
   );
+}
+
+export interface OutlineAnswer {
+  outline: Outline | null;
+  note: string;
+  needed: string[];
+}
+
+/** The outline of the schemas `hints` name, with every schema text read
+ * for it (for their documentation). */
+export async function outline(hints: SchemaHint[], read: Reader): Promise<{ answer: OutlineAnswer; files: Record<string, string> }> {
+  load();
+  const files: Record<string, string> = {};
+  const request = (f: Record<string, string>) => JSON.stringify({ schemas: hints, files: f });
+  const answer = await converse((f) => JSON.parse(schemaOutline(request(f))) as OutlineAnswer, read, files);
+  return { answer, files };
 }

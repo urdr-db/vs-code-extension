@@ -1,0 +1,190 @@
+// Suggestions and hovers from a schema's outline, as Urðr Studio's editor
+// makes them: the children an element may hold, its attributes, and the
+// values they may take.
+import { attributeName, contextAt, nameAt, type OpenElement } from "./context.ts";
+import type { Docs } from "./docs.ts";
+
+export type Name = [string, string];
+
+export interface OutlineAttribute {
+  name: Name;
+  required: boolean;
+  values: string[];
+}
+
+export interface OutlineElement {
+  name: Name;
+  top: boolean;
+  children: Name[];
+  anyChildren: boolean;
+  text: boolean;
+  textValues: string[];
+  attributes: OutlineAttribute[];
+  anyAttributes: boolean;
+}
+
+export interface Outline {
+  elements: OutlineElement[];
+}
+
+/** A suggestion, independent of the LSP types. */
+export interface Suggestion {
+  label: string;
+  kind: "element" | "attribute" | "value" | "close";
+  /** Snippet text, with tab stops. */
+  insert: string;
+  detail?: string;
+  documentation?: string;
+  /** Replace from this offset to the cursor. */
+  start: number;
+  /** Open suggestions again after inserting (for values). */
+  retrigger?: boolean;
+  required?: boolean;
+}
+
+const XML_NS = "http://www.w3.org/XML/1998/namespace";
+const key = (n: Name) => `${n[0]}\u0000${n[1]}`;
+
+export class Index {
+  readonly outline: Outline;
+  readonly docs: Docs;
+  private byName = new Map<string, OutlineElement>();
+  constructor(outline: Outline, docs: Docs) {
+    this.outline = outline;
+    this.docs = docs;
+    for (const e of outline.elements) this.byName.set(key(e.name), e);
+  }
+  element(n: Name): OutlineElement | undefined {
+    return this.byName.get(key(n));
+  }
+  /** What an open element is in the outline, if anything. */
+  of(e: OpenElement | undefined): OutlineElement | undefined {
+    return e ? this.element([e.namespace, e.local]) : undefined;
+  }
+}
+
+/** How to write `n` where `scope` is in force: no prefix in the default
+ * namespace, else a prefix bound to it, else its local name. */
+function written(n: Name, scope: Map<string, string> | undefined): string {
+  if (n[0] === XML_NS) return `xml:${n[1]}`;
+  if (!scope || (scope.get("") ?? "") === n[0]) return n[1];
+  for (const [p, u] of scope) if (p && u === n[0]) return `${p}:${n[1]}`;
+  return n[1];
+}
+
+/** Escapes snippet syntax: dollar, closing brace and backslash. */
+function escapeSnippet(s: string): string {
+  return s.replace(/[$}\\]/g, (c) => "\\" + c);
+}
+
+export function suggest(text: string, offset: number, index: Index): Suggestion[] {
+  const { open, place } = contextAt(text, offset);
+  const parent = open[open.length - 1];
+  switch (place.kind) {
+    case "element": {
+      const allowed = parent ? index.of(parent)?.children : index.outline.elements.filter((e) => e.top).map((e) => e.name);
+      if (!allowed) return [];
+      return allowed.map((n) => {
+        const name = written(n, parent?.scope);
+        const el = index.element(n);
+        const required = (el?.attributes ?? []).filter((a) => a.required);
+        let tab = 1;
+        const attrs = required.map((a) => ` ${written(a.name, undefined)}="$${tab++}"`).join("");
+        const empty = el !== undefined && !el.text && !el.children.length && !el.anyChildren;
+        const insert = empty ? `${escapeSnippet(name)}${attrs}/>` : `${escapeSnippet(name)}${attrs}>$0</${escapeSnippet(name)}>`;
+        return {
+          label: name,
+          kind: "element" as const,
+          insert,
+          detail: summary(el),
+          documentation: index.docs.elements.get(n[1]),
+          start: place.start,
+        };
+      });
+    }
+    case "close":
+      return parent ? [{ label: parent.qname, kind: "close", insert: `${escapeSnippet(parent.qname)}>`, start: place.start }] : [];
+    case "attribute": {
+      const el = index.of(place.element);
+      if (!el) return [];
+      const present = new Set(place.present.map((q) => key(attributeName(q, place.element))));
+      return el.attributes
+        .filter((a) => !present.has(key(a.name)))
+        .map((a) => {
+          const name = written(a.name, place.element.scope);
+          return {
+            label: name,
+            kind: "attribute" as const,
+            insert: `${escapeSnippet(name)}="$1"`,
+            detail: a.required ? "required" : a.values.length ? a.values.slice(0, 6).join(" | ") : undefined,
+            documentation: index.docs.attributes.get(a.name[1]),
+            start: place.start,
+            retrigger: a.values.length > 0,
+            required: a.required,
+          };
+        });
+    }
+    case "value": {
+      const el = index.of(place.element);
+      const n = attributeName(place.attribute, place.element);
+      const a = el?.attributes.find((x) => key(x.name) === key(n));
+      return (a?.values ?? []).map((v) => ({ label: v, kind: "value" as const, insert: escapeSnippet(v), start: place.start }));
+    }
+    case "text": {
+      const el = index.of(parent);
+      return (el?.textValues ?? []).map((v) => ({ label: v, kind: "value" as const, insert: escapeSnippet(v), start: offset }));
+    }
+  }
+}
+
+function summary(el: OutlineElement | undefined): string | undefined {
+  if (!el) return undefined;
+  const required = el.attributes.filter((a) => a.required).map((a) => `@${a.name[1]}`);
+  return required.length ? `needs ${required.join(", ")}` : undefined;
+}
+
+/** Hover text, in Markdown, for the element or attribute name at
+ * `offset`, with its range. */
+export function hover(text: string, offset: number, index: Index): { markdown: string; start: number; end: number } | undefined {
+  const at = nameAt(text, offset);
+  if (!at) return undefined;
+  const { open, place } = at.context;
+  const list = (names: string[], max = 25) =>
+    names.length > max ? `${names.slice(0, max).join(", ")} and ${names.length - max} more` : names.join(", ");
+  if (at.kind === "element") {
+    const colon = at.qname.indexOf(":");
+    const local = at.qname.slice(colon + 1);
+    let ns: string;
+    if (place.kind === "close") ns = open[open.length - 1]?.namespace ?? "";
+    else {
+      // The element's own xmlns declarations count too.
+      const end = text.indexOf(">", at.end);
+      const tag = text.slice(at.start, end < 0 ? undefined : end);
+      const own = new Map(open[open.length - 1]?.scope ?? []);
+      for (const m of tag.matchAll(/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']*)["']/g)) own.set(m[1] ?? "", m[2]!);
+      ns = own.get(colon < 0 ? "" : at.qname.slice(0, colon)) ?? "";
+    }
+    const el = index.element([ns, local]);
+    if (!el) return undefined;
+    const parts = [`**<${at.qname}>**`];
+    const doc = index.docs.elements.get(local);
+    if (doc) parts.push(doc);
+    const attrs = el.attributes.map((a) => (a.required ? `**${a.name[1]}**` : a.name[1]));
+    if (attrs.length) parts.push(`Attributes: ${list(attrs)}${el.anyAttributes ? ", and any other" : ""}`);
+    const kids = el.children.map((c) => c[1]);
+    if (kids.length || el.anyChildren) {
+      parts.push(`May contain: ${list(kids)}${el.anyChildren ? (kids.length ? ", and any element" : "any element") : ""}${el.text ? ", and text" : ""}`);
+    } else if (el.text) parts.push("May contain: text");
+    return { markdown: parts.join("\n\n"), start: at.start, end: at.end };
+  }
+  if (place.kind !== "attribute") return undefined;
+  const el = index.of(place.element);
+  const n = attributeName(at.qname, place.element);
+  const a = el?.attributes.find((x) => key(x.name) === key(n));
+  if (!a) return undefined;
+  const parts = [`**@${at.qname}**${a.required ? " (required)" : ""}`];
+  const doc = index.docs.attributes.get(n[1]);
+  if (doc) parts.push(doc);
+  if (a.values.length) parts.push(`Values: ${list(a.values.map((v) => "`" + v + "`"))}`);
+  return { markdown: parts.join("\n\n"), start: at.start, end: at.end };
+}

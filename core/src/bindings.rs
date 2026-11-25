@@ -54,3 +54,16 @@ pub fn check_xpath(request: &str) -> String {
 pub fn check_xslt(request: &str) -> String {
     answer(request, crate::check_xslt)
 }
+
+/// The outline of the schemas a document names, for suggestions.
+#[wasm_bindgen(js_name = schemaOutline)]
+#[must_use]
+pub fn schema_outline(request: &str) -> String {
+    match crate::outline::request_from_json(request) {
+        Ok(r) => crate::outline::answer_to_json(&crate::outline::outline(&r)),
+        Err(message) => crate::outline::answer_to_json(&crate::outline::OutlineAnswer {
+            note: format!("the request is not usable: {message}"),
+            ..crate::outline::OutlineAnswer::default()
+        }),
+    }
+}
