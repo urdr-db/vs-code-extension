@@ -5,6 +5,7 @@
 import {
   CodeActionKind,
   CompletionItemKind,
+  SymbolKind,
   InsertTextFormat,
   MarkupKind,
   type CodeAction,
@@ -24,6 +25,9 @@ import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
 import { elements, tagNames } from "./elements.ts";
 import { format } from "./format.ts";
 import { fixesAt } from "./fixes.ts";
+import { definitions, load, references, type Loaded, type Module } from "./code-nav.ts";
+import { xslModule } from "./xsl-symbols.ts";
+import { xqueryModule } from "./xquery-symbols.ts";
 import { idAt, idProblems, links } from "./ids.ts";
 import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
@@ -57,6 +61,7 @@ export function serve(connection: Connection, platform: Platform): void {
         documentFormattingProvider: true,
         selectionRangeProvider: true,
         codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
+        documentSymbolProvider: true,
       },
     };
   });
@@ -341,7 +346,73 @@ export function serve(connection: Connection, platform: Platform): void {
     if (!all) return null;
     return { changes: { [params.textDocument.uri]: all.map((range) => ({ range, newText: params.newName.replace(/^#/, "") })) } };
   });
-  connection.onReferences((params) => {
+  // XSLT and XQuery: templates, functions, variables, modes, keys and
+  // attribute sets, across included and imported modules (code-nav.ts).
+  const parserFor = (doc: TextDocument): ((text: string) => Module) | undefined => {
+    const kind = kindOf(doc);
+    return kind === "xslt" ? xslModule : kind === "xquery" ? xqueryModule : undefined;
+  };
+  /** The document's modules: it and what it includes or imports, and,
+   * for references, the open documents that include or import it. */
+  async function modulesOf(doc: TextDocument, users: boolean): Promise<Loaded[] | undefined> {
+    const parse = parserFor(doc);
+    if (!parse) return undefined;
+    const read = reader();
+    const own = await load(doc.uri, doc.getText(), read, parse);
+    if (!users) return own;
+    const all = new Map(own.map((m) => [m.uri, m]));
+    for (const other of documents.all()) {
+      if (other.uri === doc.uri || parserFor(other) !== parse) continue;
+      const theirs = await load(other.uri, other.getText(), read, parse);
+      if (theirs.some((m) => m.uri === doc.uri)) for (const m of theirs) if (!all.has(m.uri)) all.set(m.uri, m);
+    }
+    return [...all.values()];
+  }
+  const toLocation = (modules: Loaded[]) => (p: { uri: string; start: number; end: number }) => {
+    const text = modules.find((m) => m.uri === p.uri)!.text;
+    return { uri: p.uri, range: { start: indexToPosition(text, p.start), end: indexToPosition(text, p.end) } };
+  };
+  async function codeDefinition(doc: TextDocument, offset: number) {
+    const modules = await modulesOf(doc, false);
+    if (!modules) return undefined;
+    return definitions(modules[0]!, offset, modules).map(toLocation(modules));
+  }
+  const SYMBOLS = {
+    template: SymbolKind.Method,
+    match: SymbolKind.Method,
+    function: SymbolKind.Function,
+    variable: SymbolKind.Variable,
+    param: SymbolKind.Variable,
+    mode: SymbolKind.Enum,
+    key: SymbolKind.Key,
+    "attribute-set": SymbolKind.Struct,
+  } as const;
+  connection.onDocumentSymbol((params) => {
+    const doc = documents.get(params.textDocument.uri);
+    const parse = doc && parserFor(doc);
+    if (!doc || !parse) return null;
+    const text = doc.getText();
+    const at = (start: number, end: number) => ({ start: indexToPosition(text, start), end: indexToPosition(text, end) });
+    return parse(text)
+      .declarations.filter((d) => !d.scope)
+      .map((d) => ({
+        name: d.kind === "match" ? `match="${d.label}"` : (d.kind === "variable" || d.kind === "param") && !d.label.startsWith("$") ? `$${d.label}` : d.label,
+        detail: d.detail ?? (["mode", "key", "attribute-set", "param"].includes(d.kind) ? d.kind : undefined),
+        kind: SYMBOLS[d.kind],
+        range: at(d.fullStart, d.fullEnd),
+        selectionRange: at(d.start, d.end),
+      }));
+  });
+
+  connection.onReferences(async (params) => {
+    const code = documents.get(params.textDocument.uri);
+    if (code && parserFor(code)) {
+      const modules = await modulesOf(code, true);
+      const here = modules?.find((m) => m.uri === code.uri);
+      const found = here ? references(here, code.offsetAt(params.position), modules!, params.context.includeDeclaration) : [];
+      if (found.length) return found.map(toLocation(modules!));
+      if (kindOf(code) === "xquery") return null;
+    }
     const ids = idRanges(params.textDocument.uri, params.position);
     if (!ids) return null;
     const ranges = [...(params.context.includeDeclaration ? ids.declarations : []), ...ids.uses];
@@ -350,6 +421,11 @@ export function serve(connection: Connection, platform: Platform): void {
   // From a pointer to the element with that xml:id, here or in the
   // document the pointer names (people.xml#ana).
   connection.onDefinition(async (params) => {
+    const code = documents.get(params.textDocument.uri);
+    if (code && parserFor(code)) {
+      const found = await codeDefinition(code, code.offsetAt(params.position));
+      if (found?.length) return found;
+    }
     const doc = markup(params.textDocument.uri);
     if (!doc) return null;
     const offset = doc.offsetAt(params.position);

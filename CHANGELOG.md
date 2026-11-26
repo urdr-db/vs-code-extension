@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- XSLT and XQuery: Go to Definition, Find All References and the
+  Outline for templates, functions, variables, parameters, modes, keys
+  and attribute sets, across included and imported modules.
 - Quick fixes for schema problems: add the required attributes a start
   tag lacks, change an element to one the parent allows, remove or
   change an attribute the element doesn't allow, and change a value to
