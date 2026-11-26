@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Quick fixes for schema problems: add the required attributes a start
+  tag lacks, change an element to one the parent allows, remove or
+  change an attribute the element doesn't allow, and change a value to
+  one the attribute takes.
 - **Format and Indent** (`Ctrl+Shift+P`, as in Oxygen) puts each element
   that holds only elements on its own lines, and keeps mixed content,
   such as a TEI `<p>`, as written. Format Document uses it too.
