@@ -2,7 +2,7 @@
   "name": "urdr-xml",
   "displayName": "Urðr-XML",
   "description": "Checks TEI and other XML against RELAX NG, XSD, Schematron and DTD, checks XSLT, XQuery and XPath, suggests what the schema allows, runs and previews XSLT, and reads TEI ODD files as schemas, with Urðr's own engine. No server, no Java.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "publisher": "urdr-db",
   "icon": "images/icon.png",
   "galleryBanner": { "color": "#1e1e1e", "theme": "dark" },

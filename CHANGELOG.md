@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+
+- The latest Urðr engine (f6e0a47): XSLT runs more than twice as fast.
+  TEI Lite's ODD compiles in about 7 seconds instead of 18. It also
+  brings XSLT 3.0 fixes: result documents finished inside an `xsl:try`
+  are kept, and each package strips whitespace by its own rules.
+
 ## 0.6.0
 
 In XML and XSLT files, `Ctrl+Shift+P` (`Cmd+Shift+P`) now runs Format
