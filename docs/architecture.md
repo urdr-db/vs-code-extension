@@ -171,6 +171,20 @@ rename, which wins on a tag name) and completion after `#` from it, and
 adds the duplicate and missing ids to a TEI document's problems. Going to
 `file.xml#id` reads the other file through the same reader as schemas.
 
+## XSLT and XQuery navigation
+
+`extension/src/xsl-symbols.ts` and `extension/src/xquery-symbols.ts`
+read what a module declares (with where each local variable can be
+used) and what names it uses: for XSLT from the same tag scan, in the
+attributes that hold XPath and in attribute and text value templates;
+for XQuery from the text with strings and comments blanked out. Both
+scan expressions with the same small tokenizer (`scanExpression` in
+`extension/src/code-nav.ts`). `code-nav.ts` follows `xsl:include`,
+`xsl:import` and `import module … at` through the reader, and resolves a
+use to its declaration: a local variable in scope first, then a global,
+and a function by name and number of arguments. The server answers
+definition, references and document symbols from it.
+
 ## Colours
 
 XQuery has its own grammar (`syntaxes/xquery.tmLanguage.json`). XPath

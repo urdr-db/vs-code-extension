@@ -39,6 +39,16 @@ XSLT 3.0 stylesheets and XQuery 3.1 modules are checked too, with the
 stylesheets they include or import and the library modules they import.
 They stop at the first error, as an XSLT or XQuery processor does, so
 fix one to see the next.
+In XSLT and XQuery, **Go to Definition** (`F12`), **Find All
+References** (`Shift+F12`) and the **Outline** work for templates,
+functions, variables, parameters, modes, keys and attribute sets, also
+in the modules a stylesheet includes or imports, and in the library
+modules an XQuery module imports. A function call goes to the
+declaration with as many parameters, and a variable to the declaration
+in scope. Going to the definition of a mode lists the templates in it.
+References are found in the module, what it includes or imports, and the
+open files that include or import it.
+
 XQuery files also get syntax colours, which VS Code doesn't have on its own.
 So does the XPath inside XSLT and Schematron: in `select`, `test`,
 `match` and the other attributes that hold an expression or pattern, and
