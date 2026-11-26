@@ -52,6 +52,20 @@ closing tag. Hovering over an element or attribute shows the schema's
 documentation for it, such as the TEI Guidelines' description, along
 with its attributes and what it may contain.
 
+## TEI ids
+
+In TEI documents, an `xml:id` and the `#id` pointers to it (in `ref`,
+`target`, `corresp`, `who` and any other attribute) are linked:
+
+- **Go to Definition** (`F12`, or Ctrl/Cmd+click) on `#p1` goes to the
+  element with `xml:id="p1"`, also in another file (`people.xml#ana`).
+- **Find All References** (`Shift+F12`) lists every pointer to an id.
+- **Rename** (`F2`) on an id or a pointer renames the id and every
+  pointer to it in the document.
+- After `#` in an attribute value, the document's ids are suggested.
+- An id given twice is an error, and a `#id` that no element has is a
+  warning.
+
 ## Editing elements
 
 These actions work as in Oxygen XML Editor, with Oxygen's keys in XML

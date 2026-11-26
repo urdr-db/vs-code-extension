@@ -140,6 +140,15 @@ allowed (order and counts are not checked). Renaming is the LSP rename request, 
 from the same scan, which also answers linked editing. The status bar's
 caret path (`extension/src/caret.ts`) comes from the same scan too.
 
+## TEI ids
+
+`extension/src/ids.ts` finds the `xml:id` values and the `#id` tokens in
+attribute values with the same tag scan as the editing actions. The
+server answers definition, references, rename (after the element-name
+rename, which wins on a tag name) and completion after `#` from it, and
+adds the duplicate and missing ids to a TEI document's problems. Going to
+`file.xml#id` reads the other file through the same reader as schemas.
+
 ## Colours
 
 XQuery has its own grammar (`syntaxes/xquery.tmLanguage.json`). XPath
