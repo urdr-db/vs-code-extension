@@ -2,7 +2,7 @@
 // Delete Element Tags, Split, Join, Rename).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deleteTags, elementAt, elements, join, pathAt, split, tagNames, tags, type Edit } from "../src/elements.ts";
+import { deleteTags, elementAt, elements, join, matchingTag, pathAt, selectElement, split, tagNames, tags, type Edit } from "../src/elements.ts";
 
 const DOC = `<?xml version="1.0"?><!DOCTYPE r [<!ENTITY a "<b>">]><r a="x>y"><!-- <c> --><p xml:id="p1" rend="i">one <hi>two</hi> <hi>three</hi></p><e/><![CDATA[<x>]]></r>`;
 const at = (s: string) => DOC.indexOf(s);
@@ -52,4 +52,20 @@ test("gives the path of elements to the caret", () => {
   assert.equal(pathAt(text, text.indexOf("a</p>")), "/TEI/text/body/div[1]/p");
   assert.equal(pathAt(text, text.indexOf("<tei:note") + 2), "/TEI/text/body/div[2]/tei:note");
   assert.equal(pathAt(text, 3), undefined);
+});
+
+test("selects the element around the selection, then the next one out", () => {
+  const p = selectElement(DOC, at("two"), at("two"))!;
+  assert.equal(DOC.slice(p.start, p.end), "<hi>two</hi>");
+  const q = selectElement(DOC, p.start, p.end)!;
+  assert.match(DOC.slice(q.start, q.end), /^<p xml:id="p1".*<\/p>$/);
+  assert.equal(selectElement(DOC, at("<e/>"), at("<e/>"))?.start, at("<e/>"));
+});
+
+test("goes to the matching tag", () => {
+  const close = matchingTag(DOC, at("<p ") + 1)!;
+  assert.equal(DOC.slice(close - 2, close + 1), "</p");
+  assert.equal(matchingTag(DOC, close), at("<p ") + 1);
+  assert.equal(matchingTag(DOC, at("two")), at("<hi>two") + 1);
+  assert.equal(matchingTag("text", 1), undefined);
 });

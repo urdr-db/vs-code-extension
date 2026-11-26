@@ -8,6 +8,7 @@ import {
   MarkupKind,
   type CompletionItem,
   type Connection,
+  type SelectionRange,
   Diagnostic,
   DiagnosticSeverity,
   TextDocuments,
@@ -18,7 +19,8 @@ import { check, outline, validate, type Kind } from "./core.ts";
 import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
-import { tagNames } from "./elements.ts";
+import { elements, tagNames } from "./elements.ts";
+import { format } from "./format.ts";
 import { idAt, idProblems, links } from "./ids.ts";
 import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
@@ -49,6 +51,8 @@ export function serve(connection: Connection, platform: Platform): void {
         definitionProvider: true,
         referencesProvider: true,
         linkedEditingRangeProvider: true,
+        documentFormattingProvider: true,
+        selectionRangeProvider: true,
       },
     };
   });
@@ -365,6 +369,48 @@ export function serve(connection: Connection, platform: Platform): void {
   connection.languages.onLinkedEditingRange((params) => {
     const ranges = namesAt(params.textDocument.uri, params.position);
     return ranges && ranges.length > 1 ? { ranges, wordPattern: "[^\\s<>/\"'=]+" } : null;
+  });
+
+  // Format and Indent (format.ts): elements the schema lets hold text
+  // keep their content as written.
+  connection.onDocumentFormatting(async (params) => {
+    const doc = markup(params.textDocument.uri);
+    if (!doc) return null;
+    const index = await indexFor(doc).catch(() => undefined);
+    const text = doc.getText();
+    const indent = params.options.insertSpaces ? " ".repeat(params.options.tabSize) : "\t";
+    const formatted = format(text, { indent, mixed: index && ((ns, local) => index.element([ns, local])?.text) });
+    if (formatted === undefined) {
+      connection.window.showWarningMessage("The document's tags don't match, so it can't be formatted yet.");
+      return null;
+    }
+    if (formatted === text) return [];
+    return [{ range: { start: { line: 0, character: 0 }, end: doc.positionAt(text.length) }, newText: formatted }];
+  });
+
+  // Expand Selection grows by elements: the content, then the element,
+  // then its parent's content, and so on.
+  connection.onSelectionRanges((params) => {
+    const doc = markup(params.textDocument.uri);
+    if (!doc) return null;
+    const text = doc.getText();
+    const all = elements(text);
+    return params.positions.map((position) => {
+      const offset = doc.offsetAt(position);
+      const spans: Array<[number, number]> = [];
+      for (const e of all) {
+        if (e.open.start < offset && offset < e.end) {
+          if (e.close && e.contentStart <= offset && offset <= e.contentEnd && e.contentEnd > e.contentStart) spans.push([e.contentStart, e.contentEnd]);
+          spans.push([e.open.start, e.end]);
+        }
+      }
+      // Innermost first, each holding the one before.
+      spans.sort((a, b) => a[1] - a[0] - (b[1] - b[0]));
+      let range: SelectionRange | undefined;
+      const chain = spans.filter((s, k) => k === 0 || s[0] !== spans[k - 1]![0] || s[1] !== spans[k - 1]![1]).reverse();
+      for (const [start, end] of chain) range = { range: { start: doc.positionAt(start), end: doc.positionAt(end) }, parent: range };
+      return range ?? { range: { start: position, end: position } };
+    });
   });
 
   // The elements allowed at an offset, for "Surround with Tags": what the

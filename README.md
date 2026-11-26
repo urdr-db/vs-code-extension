@@ -88,11 +88,26 @@ and XSLT files. Each is also in the Command Palette under **Urðr-XML**.
 | **Split Element** at the caret, into two with the same attributes (but not the same id) | `Alt+Shift+D` | `Ctrl+Option+D` |
 | **Join Elements**: joins the two elements on either side of the caret, when they have the same name and attributes | `Alt+Shift+J` | `Cmd+Option+J` |
 | **Rename Element**: renames the start and end tag together | `F2` | `F2` |
+| **Format and Indent**: see below | `Ctrl+Shift+P` | `Cmd+Shift+P` |
+| **Select Element**: selects the element around the selection; again, the one around that | | |
+| **Go to Matching Tag**: from a start tag to its end tag and back | | |
 
-In XML files these keys replace VS Code's own: `Ctrl+E` (Quick Open)
-and `Ctrl+/` (comment lines; `Ctrl+K Ctrl+C` still comments). To keep
+In XML files these keys replace VS Code's own: `Ctrl+E` (Quick Open),
+`Ctrl+/` (comment lines; `Ctrl+K Ctrl+C` still comments) and
+`Ctrl+Shift+P` (the Command Palette; `F1` still opens it). To keep
 VS Code's keys, turn off `urdr.oxygenShortcuts`; the actions stay in the
 Command Palette.
+
+**Format and Indent** puts each element that holds only elements on
+lines of its own, indented with the editor's tab settings. An element
+that holds text, or that the schema lets hold text, such as a TEI `<p>`,
+keeps its content as written, as adding line breaks there would add
+text; so do `xml:space="preserve"`, `xsl:text` and CDATA. Tags, comments
+and attributes stay as written. **Format Document** does the same.
+
+**Expand Selection** (`Shift+Alt+Right`, `Ctrl+Shift+Cmd+Right` on macOS)
+grows the selection by elements: the content, then the element, then its
+parent's content.
 
 The status bar shows where the caret is, as a path of elements such as
 `/TEI/text/body/div[2]/p[3]`. Click it, or run **Copy XPath**, to copy

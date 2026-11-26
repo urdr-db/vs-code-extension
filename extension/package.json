@@ -89,7 +89,7 @@
         "urdr.oxygenShortcuts": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Give the element actions Oxygen XML Editor's keys in XML editors: Surround with Tags (`Ctrl+E`), Surround with the Last Tag (`Ctrl+/`), Delete Element Tags (`Alt+Shift+X`), Split Element (`Alt+Shift+D`), Join Elements (`Alt+Shift+J`). They replace VS Code's own uses of these keys there. Off, the actions are still in the Command Palette."
+          "markdownDescription": "Give the element actions Oxygen XML Editor's keys in XML editors: Surround with Tags (`Ctrl+E`), Surround with the Last Tag (`Ctrl+/`), Delete Element Tags (`Alt+Shift+X`), Split Element (`Alt+Shift+D`), Join Elements (`Alt+Shift+J`), Format and Indent (`Ctrl+Shift+P`). They replace VS Code's own uses of these keys there. Off, the actions are still in the Command Palette."
         },
         "urdr.transform.timeout": {
           "type": "number",
@@ -123,6 +123,21 @@
       {
         "command": "urdr.joinElements",
         "title": { "value": "Join Elements", "original": "Join Elements" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
+      },
+      {
+        "command": "urdr.formatAndIndent",
+        "title": { "value": "Format and Indent", "original": "Format and Indent" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
+      },
+      {
+        "command": "urdr.selectElement",
+        "title": { "value": "Select Element", "original": "Select Element" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
+      },
+      {
+        "command": "urdr.goToMatchingTag",
+        "title": { "value": "Go to Matching Tag", "original": "Go to Matching Tag" },
         "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
@@ -163,7 +178,8 @@
       { "command": "urdr.surroundWithLastTag", "key": "ctrl+/", "mac": "cmd+/", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
       { "command": "urdr.deleteElementTags", "key": "alt+shift+x", "mac": "cmd+alt+x", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
       { "command": "urdr.splitElement", "key": "alt+shift+d", "mac": "ctrl+alt+d", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.joinElements", "key": "alt+shift+j", "mac": "cmd+alt+j", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" }
+      { "command": "urdr.joinElements", "key": "alt+shift+j", "mac": "cmd+alt+j", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.formatAndIndent", "key": "ctrl+shift+p", "mac": "cmd+shift+p", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" }
     ],
     "menus": {
       "editor/title": [
@@ -197,6 +213,9 @@
         { "command": "urdr.splitElement", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.joinElements", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.renameElement", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.formatAndIndent", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.selectElement", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.goToMatchingTag", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.copyXPath", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.evaluateXPath", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.compileOdd", "when": "resourceExtname == .odd" },
