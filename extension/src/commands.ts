@@ -339,12 +339,22 @@ class Preview {
     const result = shown.results[0];
     let linked: string[] = [];
     if (result && (result.method === "html" || result.method === "xhtml")) {
-      const text = await inlineHttpStyles(result.text, (url) => this.css(url));
+      // Stylesheets on the web that could not be read, and why. In the
+      // browser the page itself cannot load them either; on the desktop
+      // it still tries those on https.
+      const web = vscode.env.uiKind === vscode.UIKind.Web;
+      const unread = new Map<string, string>();
+      const remote = async (url: string) => {
+        const got = await this.css(url);
+        if (got.text === undefined && (web || /^http:/i.test(url))) unread.set(url.replace(/^http:/i, "https:"), got.why);
+        return got.text;
+      };
+      const text = await inlineHttpStyles(result.text, remote);
       // The stylesheets still linked (by https) are read too, to see
       // whether they colour the page.
       const folder = vscode.Uri.joinPath(near, "..");
       const read = (href: string): Promise<string | undefined> => {
-        if (/^https?:/i.test(href)) return this.css(href);
+        if (/^https?:/i.test(href)) return remote(href);
         if (/^[a-z][\w+.-]*:/i.test(href)) return Promise.resolve(undefined);
         const uri = vscode.Uri.joinPath(folder, href.replace(/[?#].*$/, ""));
         return Promise.resolve(vscode.workspace.fs.readFile(uri)).then(
@@ -355,25 +365,52 @@ class Preview {
       linked = (await Promise.all(stylesheetLinks(text).map(read))).filter((t) => t !== undefined);
       if (generation !== this.generation) return;
       shown.results = [{ ...result, text }, ...shown.results.slice(1)];
+      shown.messages = [...shown.messages, ...[...unread].map(([url, why]) => `The stylesheet ${url} ${why}.`)];
     }
     this.panel.webview.html = previewPage(shown, { cspSource: this.panel.webview.cspSource, base, stale: failed && !!this.lastGood, linked });
   }
 
-  /** Stylesheets the page links, as read, kept while the preview is open. */
-  private readonly styles = new Map<string, Promise<string | undefined>>();
-  private css(url: string): Promise<string | undefined> {
+  /** Stylesheets the page links, as read, kept while the preview is
+   * open: by the address given, and by each address tried. */
+  private readonly styles = new Map<string, Promise<{ text?: string; why: string }>>();
+  private css(url: string): Promise<{ text?: string; why: string }> {
     let p = this.styles.get(url);
     if (!p) {
-      const get = async (u: string) => {
-        const r = await fetch(u, { redirect: "follow", signal: AbortSignal.timeout(10_000) });
-        return r.ok ? await r.text() : undefined;
-      };
+      const web = vscode.env.uiKind === vscode.UIKind.Web;
+      const https = url.replace(/^http:/i, "https:");
       // The address as given, then on https; in the browser, which
       // refuses http, https only.
-      const https = url.replace(/^http:/i, "https:");
-      const first = vscode.env.uiKind === vscode.UIKind.Web && https !== url ? Promise.resolve(undefined) : get(url).catch(() => undefined);
-      p = first.then((t) => t ?? (https === url ? undefined : get(https).catch(() => undefined)));
+      const tries = web || https === url ? [https] : [url, https];
+      p = (async () => {
+        let last = { why: "" } as { text?: string; why: string };
+        for (const u of tries) {
+          last = await this.download(u);
+          if (last.text !== undefined) break;
+        }
+        return last;
+      })();
       this.styles.set(url, p);
+      // One that failed is tried again at the next refresh.
+      void p.then((r) => r.text === undefined && this.styles.delete(url));
+    }
+    return p;
+  }
+
+  private download(url: string): Promise<{ text?: string; why: string }> {
+    const key = `get ${url}`;
+    let p = this.styles.get(key);
+    if (!p) {
+      p = fetch(url, { redirect: "follow", signal: AbortSignal.timeout(10_000) }).then(
+        async (r) => (r.ok ? { text: await r.text(), why: "" } : { why: `did not load: the server answered ${r.status}${r.statusText ? ` ${r.statusText}` : ""}` }),
+        () => ({
+          why:
+            vscode.env.uiKind === vscode.UIKind.Web
+              ? "may not show: VS Code for the Web needs its server to allow use by other sites (the Access-Control-Allow-Origin and Cross-Origin-Resource-Policy headers)"
+              : "did not load: it could not be downloaded",
+        }),
+      );
+      this.styles.set(key, p);
+      void p.then((r) => r.text === undefined && this.styles.delete(key));
     }
     return p;
   }
