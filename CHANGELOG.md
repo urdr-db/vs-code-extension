@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- TEI ids: go from `#id` to the element with that `xml:id` (also in
+  another file), find and rename every pointer to an id, ids suggested
+  after `#`, and ids given twice or missing flagged.
 - XPath colours in XSLT and Schematron attributes and in XSLT attribute
   value templates.
 - The status bar shows the caret's path of elements, and **Copy XPath**

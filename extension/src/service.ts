@@ -19,6 +19,8 @@ import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
 import { tagNames } from "./elements.ts";
+import { idAt, idProblems, links } from "./ids.ts";
+import { contextAt } from "./context.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { makeReader, type Settings } from "./reader.ts";
@@ -43,6 +45,8 @@ export function serve(connection: Connection, platform: Platform): void {
         completionProvider: { triggerCharacters: ["<", "/", " ", '"', "'", ":"] },
         hoverProvider: true,
         renameProvider: { prepareProvider: true },
+        definitionProvider: true,
+        referencesProvider: true,
         linkedEditingRangeProvider: true,
       },
     };
@@ -65,6 +69,7 @@ export function serve(connection: Connection, platform: Platform): void {
   });
 
   const XSLT_NS = "http://www.w3.org/1999/XSL/Transform";
+  const TEI_NS = "http://www.tei-c.org/ns/1.0";
 
   /** What to check a document as, by its language and, for XML, its root. */
   function kindOf(doc: TextDocument): Kind | "xml" | undefined {
@@ -176,6 +181,17 @@ export function serve(connection: Connection, platform: Platform): void {
       const at = Math.max(0, text.indexOf(name));
       out.push({ range: range(text, at, at + name.length), severity: DiagnosticSeverity.Error, source: "Urðr ODD", message: why });
     }
+    // In TEI, ids given twice and #pointers to ids the document lacks.
+    if (text.slice(0, 4000).includes(TEI_NS)) {
+      for (const p of idProblems(links(text))) {
+        out.push({
+          range: range(text, p.start, p.end),
+          severity: p.severity === "error" ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
+          source: "Urðr TEI",
+          message: p.message,
+        });
+      }
+    }
     const needed = (report.needed ?? []).filter((n) => !n.startsWith(ODD_RNG));
     if (needed.length) {
       out.push({
@@ -229,11 +245,12 @@ export function serve(connection: Connection, platform: Platform): void {
   connection.onCompletion(async (params): Promise<CompletionItem[]> => {
     const doc = documents.get(params.textDocument.uri);
     if (!doc || kindOf(doc) !== "xml") return [];
-    const index = await indexFor(doc).catch(() => undefined);
-    if (!index) return [];
     const text = doc.getText();
     const offset = doc.offsetAt(params.position);
-    return suggest(text, offset, index).map((s, i) => ({
+    const ids = idsAfterHash(doc, text, offset, params.position);
+    const index = await indexFor(doc).catch(() => undefined);
+    if (!index) return ids;
+    return [...ids, ...suggest(text, offset, index).map((s, i) => ({
       label: s.label,
       kind: KINDS[s.kind],
       detail: s.detail,
@@ -243,8 +260,24 @@ export function serve(connection: Connection, platform: Platform): void {
       insertTextFormat: InsertTextFormat.Snippet,
       textEdit: { range: { start: doc.positionAt(s.start), end: params.position }, newText: s.insert },
       command: s.retrigger ? { title: "Suggest values", command: "editor.action.triggerSuggest" } : undefined,
-    }));
+    }))];
   });
+
+  /** After `#` in an attribute value, the document's ids. */
+  function idsAfterHash(doc: TextDocument, text: string, offset: number, position: { line: number; character: number }): CompletionItem[] {
+    const place = contextAt(text, offset).place;
+    if (place.kind !== "value" || place.attribute === "xml:id") return [];
+    const token = /\S*$/.exec(place.partial)![0];
+    if (!token.startsWith("#")) return [];
+    const start = doc.positionAt(offset - token.length + 1);
+    return [...new Set(links(text).ids.map((s) => s.id))].map((id) => ({
+      label: id,
+      kind: CompletionItemKind.Reference,
+      detail: "xml:id",
+      sortText: `0${id}`,
+      textEdit: { range: { start, end: position }, newText: id },
+    }));
+  }
 
   connection.onHover(async (params) => {
     const doc = documents.get(params.textDocument.uri);
@@ -271,11 +304,62 @@ export function serve(connection: Connection, platform: Platform): void {
     const ranges = tagNames(doc.getText(), doc.offsetAt(position));
     return ranges?.map((r) => ({ start: doc.positionAt(r.start), end: doc.positionAt(r.end) }));
   };
-  connection.onPrepareRename((params) => namesAt(params.textDocument.uri, params.position)?.find((r) => r.start.line === params.position.line && r.start.character <= params.position.character && params.position.character <= r.end.character) ?? null);
+  // An id, as an xml:id or a #pointer: its declarations and every use.
+  const idRanges = (uri: string, position: { line: number; character: number }) => {
+    const doc = markup(uri);
+    if (!doc) return undefined;
+    const text = doc.getText();
+    const l = links(text);
+    const at = idAt(l, doc.offsetAt(position));
+    if (!at) return undefined;
+    const toRange = (s: { start: number; end: number }) => ({ start: doc.positionAt(s.start), end: doc.positionAt(s.end) });
+    return {
+      at: toRange(at.span),
+      declarations: l.ids.filter((s) => s.id === at.id).map(toRange),
+      uses: l.pointers.filter((p) => !p.document && p.id === at.id).map(toRange),
+    };
+  };
+  connection.onPrepareRename(
+    (params) =>
+      namesAt(params.textDocument.uri, params.position)?.find((r) => r.start.line === params.position.line && r.start.character <= params.position.character && params.position.character <= r.end.character) ??
+      idRanges(params.textDocument.uri, params.position)?.at ??
+      null,
+  );
   connection.onRenameRequest((params) => {
     const ranges = namesAt(params.textDocument.uri, params.position);
-    if (!ranges) return null;
-    return { changes: { [params.textDocument.uri]: ranges.map((range) => ({ range, newText: params.newName })) } };
+    const ids = ranges ? undefined : idRanges(params.textDocument.uri, params.position);
+    const all = ranges ?? (ids ? [...ids.declarations, ...ids.uses] : undefined);
+    if (!all) return null;
+    return { changes: { [params.textDocument.uri]: all.map((range) => ({ range, newText: params.newName.replace(/^#/, "") })) } };
+  });
+  connection.onReferences((params) => {
+    const ids = idRanges(params.textDocument.uri, params.position);
+    if (!ids) return null;
+    const ranges = [...(params.context.includeDeclaration ? ids.declarations : []), ...ids.uses];
+    return ranges.map((range) => ({ uri: params.textDocument.uri, range }));
+  });
+  // From a pointer to the element with that xml:id, here or in the
+  // document the pointer names (people.xml#ana).
+  connection.onDefinition(async (params) => {
+    const doc = markup(params.textDocument.uri);
+    if (!doc) return null;
+    const offset = doc.offsetAt(params.position);
+    const pointer = links(doc.getText()).pointers.find((p) => p.start <= offset && offset <= p.end);
+    if (!pointer) return null;
+    let uri = doc.uri;
+    let text: string | undefined = doc.getText();
+    if (pointer.document) {
+      try {
+        uri = new URL(pointer.document, doc.uri).href;
+      } catch {
+        return null;
+      }
+      text = await reader()(uri);
+    }
+    if (text === undefined) return null;
+    const target = links(text).ids.find((s) => s.id === pointer.id);
+    if (!target) return null;
+    return { uri, range: { start: indexToPosition(text, target.start), end: indexToPosition(text, target.end) } };
   });
   connection.languages.onLinkedEditingRange((params) => {
     const ranges = namesAt(params.textDocument.uri, params.position);
