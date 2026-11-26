@@ -80,12 +80,12 @@ Documentation comes from the schema texts themselves: RELAX NG's
 `a:documentation`, as the TEI schemas carry, and XSD's
 `xs:documentation` (`extension/src/docs.ts`).
 
-
 Quick fixes (`extension/src/fixes.ts`) come from the same outline, at
 the element or attribute the problem is placed on: its required
 attributes against those in the tag, the children its parent allows,
 its attributes and their values. They don't read the validator's
 message, except the names after "expected", which are listed first.
+
 ## Transformations and the preview
 
 The core runs a stylesheet as Urðr's transform request does
