@@ -136,7 +136,13 @@ client, so they need no round trip, except **Surround with Tags**, which
 asks the server (`urdr/elementsAt`) what the schema allows at the
 selection, and which of those may also hold what is selected: its
 top-level elements must be children the outline allows, and its text
-allowed (order and counts are not checked). Renaming is the LSP rename request, answered by the server
+allowed (order and counts are not checked).
+
+Format and Indent is the LSP formatting request, answered by the server
+(`extension/src/format.ts`) from a strict scan of the text, which gives
+up when the tags don't match. The outline says which elements may hold
+text, and those keep their content as written. Expand Selection is the
+LSP selection range request, from the tolerant scan. Renaming is the LSP rename request, answered by the server
 from the same scan, which also answers linked editing. The status bar's
 caret path (`extension/src/caret.ts`) comes from the same scan too.
 

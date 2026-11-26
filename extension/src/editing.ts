@@ -1,11 +1,12 @@
 // Editing actions on elements, as in Oxygen XML Editor: Surround with
 // Tags, Surround with the last tag, Delete Element Tags, Split Element,
-// Join Elements and Rename Element. Each is a command in the Command
+// Join Elements, Rename Element, Format and Indent, Select Element and
+// Go to Matching Tag. Each is a command in the Command
 // Palette; package.json gives them Oxygen's keys while the setting
 // urdr.oxygenShortcuts is on.
 import * as vscode from "vscode";
-import type { BaseLanguageClient } from "vscode-languageclient";
-import { deleteTags, join, split, type Edit } from "./elements.ts";
+import type { BaseLanguageClient, TextEdit } from "vscode-languageclient";
+import { deleteTags, join, matchingTag, selectElement, split, type Edit } from "./elements.ts";
 
 interface Allowed {
   name: string;
@@ -130,5 +131,34 @@ export function registerEditing(context: vscode.ExtensionContext, client: () => 
       else say("Put the caret between two elements with the same name and attributes to join them.");
     }),
     vscode.commands.registerTextEditorCommand("urdr.renameElement", () => vscode.commands.executeCommand("editor.action.rename")),
+    // Asks this extension's server, not whichever formatter VS Code
+    // would choose for XML.
+    vscode.commands.registerTextEditorCommand("urdr.formatAndIndent", async (editor) => {
+      const c = client();
+      if (!c) return;
+      const { tabSize, insertSpaces } = editor.options;
+      const edits = await c.sendRequest<TextEdit[] | null>("textDocument/formatting", {
+        textDocument: { uri: editor.document.uri.toString() },
+        options: { tabSize: typeof tabSize === "number" ? tabSize : 2, insertSpaces: insertSpaces !== false },
+      });
+      if (!edits?.length) return;
+      const converted = await c.protocol2CodeConverter.asTextEdits(edits);
+      await editor.edit((b) => converted?.forEach((e) => b.replace(e.range, e.newText)));
+    }),
+    vscode.commands.registerTextEditorCommand("urdr.selectElement", (editor) => {
+      const doc = editor.document;
+      const r = selectElement(doc.getText(), doc.offsetAt(editor.selection.start), doc.offsetAt(editor.selection.end));
+      if (!r) return say("No element around the selection.");
+      editor.selection = new vscode.Selection(doc.positionAt(r.start), doc.positionAt(r.end));
+      editor.revealRange(editor.selection);
+    }),
+    vscode.commands.registerTextEditorCommand("urdr.goToMatchingTag", (editor) => {
+      const doc = editor.document;
+      const to = matchingTag(doc.getText(), offset(editor));
+      if (to === undefined) return say("No tag here to match.");
+      const p = doc.positionAt(to);
+      editor.selection = new vscode.Selection(p, p);
+      editor.revealRange(editor.selection);
+    }),
   );
 }

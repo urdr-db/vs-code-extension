@@ -229,3 +229,28 @@ export function pathAt(text: string, offset: number): string | undefined {
     })
     .join("");
 }
+
+/** The element to select from the selection `start`..`end`: the
+ * innermost element holding it, or, when the selection is already an
+ * element or its content, the next one out. */
+export function selectElement(text: string, start: number, end: number): { start: number; end: number } | undefined {
+  let best: Element | undefined;
+  for (const e of elements(text)) {
+    const holds = e.open.start <= start && end <= e.end && (start < e.end || start < end) && !(e.open.start === start && e.end === end);
+    if (holds && (!best || e.depth > best.depth)) best = e;
+  }
+  return best ? { start: best.open.start, end: best.end } : undefined;
+}
+
+/** Where Go to Matching Tag goes from `offset`: from a start tag to the
+ * name in its end tag and back; elsewhere, to the start tag of the
+ * element around. */
+export function matchingTag(text: string, offset: number): number | undefined {
+  let around: Element | undefined;
+  for (const e of elements(text)) {
+    if (e.open.start <= offset && offset < e.open.end) return e.close ? e.close.nameStart : e.open.nameStart;
+    if (e.close && e.close.start <= offset && offset < e.close.end) return e.open.nameStart;
+    if (e.open.start < offset && offset < e.end && (!around || e.depth > around.depth)) around = e;
+  }
+  return around?.open.nameStart;
+}

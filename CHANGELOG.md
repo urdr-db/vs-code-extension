@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Format and Indent** (`Ctrl+Shift+P`, as in Oxygen) puts each element
+  that holds only elements on its own lines, and keeps mixed content,
+  such as a TEI `<p>`, as written. Format Document uses it too.
+- **Select Element** selects the element around the selection, and then
+  the next one out. Expand Selection grows by elements too.
+- **Go to Matching Tag** moves between an element's start and end tag.
 - **Evaluate XPath…** runs an expression on the open document and lists
   the results; moving through them shows each node.
 - TEI ids: go from `#id` to the element with that `xml:id` (also in
