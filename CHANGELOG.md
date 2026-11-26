@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.2
 
 - The XSLT preview shows an HTML result as a browser does: on a white
   page, in the browser's fonts and margins, rather than in the editor's
