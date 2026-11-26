@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
+
+In XML and XSLT files, `Ctrl+Shift+P` (`Cmd+Shift+P`) now runs Format
+and Indent, as in Oxygen. `F1` still opens the Command Palette, and
+turning off `urdr.oxygenShortcuts` gives the key back.
 
 - XSLT and XQuery: Go to Definition, Find All References and the
   Outline for templates, functions, variables, parameters, modes, keys
