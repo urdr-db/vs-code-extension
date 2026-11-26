@@ -3,9 +3,11 @@
 // (server.ts) and in VS Code for the Web (server-web.ts); the bundle for
 // the web takes "vscode-languageserver/node" from its browser half.
 import {
+  CodeActionKind,
   CompletionItemKind,
   InsertTextFormat,
   MarkupKind,
+  type CodeAction,
   type CompletionItem,
   type Connection,
   type SelectionRange,
@@ -21,6 +23,7 @@ import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
 import { elements, tagNames } from "./elements.ts";
 import { format } from "./format.ts";
+import { fixesAt } from "./fixes.ts";
 import { idAt, idProblems, links } from "./ids.ts";
 import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
@@ -53,6 +56,7 @@ export function serve(connection: Connection, platform: Platform): void {
         linkedEditingRangeProvider: true,
         documentFormattingProvider: true,
         selectionRangeProvider: true,
+        codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
       },
     };
   });
@@ -386,6 +390,36 @@ export function serve(connection: Connection, platform: Platform): void {
     }
     if (formatted === text) return [];
     return [{ range: { start: { line: 0, character: 0 }, end: doc.positionAt(text.length) }, newText: formatted }];
+  });
+
+  // Quick fixes for grammar problems (fixes.ts), from the outline at the
+  // problem's element.
+  const GRAMMARS = new Set(["Urðr RELAX NG", "Urðr XSD", "Urðr DTD"]);
+  connection.onCodeAction(async (params) => {
+    const doc = markup(params.textDocument.uri);
+    const problems = params.context.diagnostics.filter((d) => GRAMMARS.has(d.source ?? ""));
+    if (!doc || !problems.length) return null;
+    const index = await indexFor(doc).catch(() => undefined);
+    if (!index) return null;
+    const text = doc.getText();
+    const actions: CodeAction[] = [];
+    const seen = new Set<string>();
+    for (const d of problems) {
+      // "…; expected p, div": the names the validator wanted there.
+      const expected = /expected ([\w.:-]+(?:(?:, | or )[\w.:-]+)*)\s*$/.exec(d.message)?.[1]?.split(/, | or /) ?? [];
+      for (const f of fixesAt(text, doc.offsetAt(d.range.start), index, expected.map((q) => q.slice(q.indexOf(":") + 1)))) {
+        if (seen.has(f.title)) continue;
+        seen.add(f.title);
+        actions.push({
+          title: f.title,
+          kind: CodeActionKind.QuickFix,
+          diagnostics: [d],
+          isPreferred: f.preferred,
+          edit: { changes: { [doc.uri]: f.edits.map((e) => ({ range: { start: doc.positionAt(e.start), end: doc.positionAt(e.end) }, newText: e.text })) } },
+        });
+      }
+    }
+    return actions;
   });
 
   // Expand Selection grows by elements: the content, then the element,

@@ -68,7 +68,7 @@ export class Index {
 
 /** How to write `n` where `scope` is in force: no prefix in the default
  * namespace, else a prefix bound to it, else its local name. */
-function written(n: Name, scope: Map<string, string> | undefined): string {
+export function written(n: Name, scope: Map<string, string> | undefined): string {
   if (n[0] === XML_NS) return `xml:${n[1]}`;
   if (!scope || (scope.get("") ?? "") === n[0]) return n[1];
   for (const [p, u] of scope) if (p && u === n[0]) return `${p}:${n[1]}`;
@@ -190,6 +190,20 @@ function summary(el: OutlineElement | undefined): string | undefined {
   return required.length ? `needs ${required.join(", ")}` : undefined;
 }
 
+/** The expanded name of the element whose name `nameAt` found. */
+export function elementName(text: string, at: NonNullable<ReturnType<typeof nameAt>>): Name {
+  const { open, place } = at.context;
+  const colon = at.qname.indexOf(":");
+  const local = at.qname.slice(colon + 1);
+  if (place.kind === "close") return [open[open.length - 1]?.namespace ?? "", local];
+  // The element's own xmlns declarations count too.
+  const end = text.indexOf(">", at.end);
+  const tag = text.slice(at.start, end < 0 ? undefined : end);
+  const own = new Map(open[open.length - 1]?.scope ?? []);
+  for (const m of tag.matchAll(/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']*)["']/g)) own.set(m[1] ?? "", m[2]!);
+  return [own.get(colon < 0 ? "" : at.qname.slice(0, colon)) ?? "", local];
+}
+
 /** Hover text, in Markdown, for the element or attribute name at
  * `offset`, with its range. */
 export function hover(text: string, offset: number, index: Index): { markdown: string; start: number; end: number } | undefined {
@@ -199,19 +213,8 @@ export function hover(text: string, offset: number, index: Index): { markdown: s
   const list = (names: string[], max = 25) =>
     names.length > max ? `${names.slice(0, max).join(", ")} and ${names.length - max} more` : names.join(", ");
   if (at.kind === "element") {
-    const colon = at.qname.indexOf(":");
-    const local = at.qname.slice(colon + 1);
-    let ns: string;
-    if (place.kind === "close") ns = open[open.length - 1]?.namespace ?? "";
-    else {
-      // The element's own xmlns declarations count too.
-      const end = text.indexOf(">", at.end);
-      const tag = text.slice(at.start, end < 0 ? undefined : end);
-      const own = new Map(open[open.length - 1]?.scope ?? []);
-      for (const m of tag.matchAll(/xmlns(?::([\w.-]+))?\s*=\s*["']([^"']*)["']/g)) own.set(m[1] ?? "", m[2]!);
-      ns = own.get(colon < 0 ? "" : at.qname.slice(0, colon)) ?? "";
-    }
-    const el = index.element([ns, local]);
+    const local = at.qname.slice(at.qname.indexOf(":") + 1);
+    const el = index.element(elementName(text, at));
     if (!el) return undefined;
     const parts = [`**<${at.qname}>**`];
     const doc = index.docs.elements.get(local);

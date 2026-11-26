@@ -44,6 +44,16 @@ So does the XPath inside XSLT and Schematron: in `select`, `test`,
 `match` and the other attributes that hold an expression or pattern, and
 in the `{…}` of XSLT attribute value templates.
 
+Many schema problems come with quick fixes (the light bulb, or
+`Ctrl+.`), from what the schema allows there:
+
+- add the required attributes a start tag lacks;
+- change an element the parent doesn't allow to one it does, those the
+  validator expected first, then the closest names;
+- remove an attribute the element doesn't allow, or change it to a close
+  name it does;
+- change a value to one the attribute takes.
+
 ## Suggestions and hovers
 
 While you type, the schema suggests the elements allowed at that point
