@@ -194,3 +194,38 @@ export function tagNames(text: string, offset: number): Array<{ start: number; e
   }
   return undefined;
 }
+
+/** The path of elements from the root to the caret at `offset`, such as
+ * `/TEI/text/body/div[2]/p[3]`. Names are as written; a position is given
+ * where the parent has more than one child of that name. Undefined
+ * outside the root element. */
+export function pathAt(text: string, offset: number): string | undefined {
+  const all = elements(text);
+  // Each element's parent, from the last open element one level up.
+  const parent: Array<Element | undefined> = [];
+  const lastAt: Element[] = [];
+  for (const e of all) {
+    parent.push(e.depth > 0 ? lastAt[e.depth - 1] : undefined);
+    lastAt[e.depth] = e;
+    lastAt.length = e.depth + 1;
+  }
+  let inner = -1;
+  for (let k = 0; k < all.length; k++) {
+    const e = all[k]!;
+    if (e.open.start < offset && offset < e.end && (inner < 0 || e.depth > all[inner]!.depth)) inner = k;
+  }
+  if (inner < 0) return undefined;
+  const chain: number[] = [];
+  for (let k = inner; k >= 0; ) {
+    chain.unshift(k);
+    const up: Element | undefined = parent[k];
+    k = up ? all.indexOf(up) : -1;
+  }
+  return chain
+    .map((k) => {
+      const e = all[k]!;
+      const siblings = all.filter((x, j) => parent[j] === parent[k] && x.depth === e.depth && x.open.name === e.open.name);
+      return siblings.length > 1 ? `/${e.open.name}[${siblings.indexOf(e) + 1}]` : `/${e.open.name}`;
+    })
+    .join("");
+}

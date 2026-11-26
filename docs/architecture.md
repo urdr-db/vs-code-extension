@@ -137,4 +137,14 @@ asks the server (`urdr/elementsAt`) what the schema allows at the
 selection, and which of those may also hold what is selected: its
 top-level elements must be children the outline allows, and its text
 allowed (order and counts are not checked). Renaming is the LSP rename request, answered by the server
-from the same scan, which also answers linked editing.
+from the same scan, which also answers linked editing. The status bar's
+caret path (`extension/src/caret.ts`) comes from the same scan too.
+
+## Colours
+
+XQuery has its own grammar (`syntaxes/xquery.tmLanguage.json`). XPath
+(`syntaxes/xpath.tmLanguage.json`) has no language of its own: two
+injections put it into VS Code's XML grammars, one into the attributes
+that hold an expression or pattern (by name, in any XML file), one into
+the `{…}` of attribute values in XSLT files. `test/xpath-grammar.test.mts`
+runs them with copies of VS Code's XML and XSL grammars.

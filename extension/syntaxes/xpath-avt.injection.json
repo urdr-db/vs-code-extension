@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "xpath-avt.injection.urdr",
+  "comment": "XPath colours in the { } of XSLT attribute value templates; {{ and }} stand for braces.",
+  "injectionSelector": "L:text.xml.xsl string.quoted.double.xml, L:text.xml.xsl string.quoted.single.xml",
+  "patterns": [
+    {
+      "name": "constant.character.escape.xpath",
+      "match": "\\{\\{|\\}\\}"
+    },
+    {
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.begin.xpath"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.end.xpath"
+        }
+      },
+      "contentName": "meta.embedded.inline.xpath",
+      "patterns": [
+        {
+          "include": "source.xpath"
+        }
+      ]
+    }
+  ]
+}

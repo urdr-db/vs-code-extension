@@ -28,7 +28,10 @@
       }
     ],
     "grammars": [
-      { "language": "xquery", "scopeName": "source.xquery", "path": "./syntaxes/xquery.tmLanguage.json" }
+      { "language": "xquery", "scopeName": "source.xquery", "path": "./syntaxes/xquery.tmLanguage.json" },
+      { "scopeName": "source.xpath", "path": "./syntaxes/xpath.tmLanguage.json" },
+      { "scopeName": "xpath-attributes.injection.urdr", "path": "./syntaxes/xpath-attributes.injection.json", "injectTo": ["text.xml", "text.xml.xsl"] },
+      { "scopeName": "xpath-avt.injection.urdr", "path": "./syntaxes/xpath-avt.injection.json", "injectTo": ["text.xml.xsl"] }
     ],
     "configuration": {
       "title": "Urðr-XML",
@@ -128,6 +131,11 @@
         "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
+        "command": "urdr.copyXPath",
+        "title": { "value": "Copy XPath", "original": "Copy XPath" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
+      },
+      {
         "command": "urdr.transform",
         "title": { "value": "Transform with XSLT…", "original": "Transform with XSLT…" },
         "category": { "value": "Urðr-XML", "original": "Urdr-XML" },
@@ -184,6 +192,7 @@
         { "command": "urdr.splitElement", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.joinElements", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.renameElement", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.copyXPath", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.compileOdd", "when": "resourceExtname == .odd" },
         { "command": "urdr.transform", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.preview", "when": "editorLangId == xml || editorLangId == xsl" }
