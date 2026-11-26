@@ -33,7 +33,7 @@ import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
-import { makeReader, type Settings } from "./reader.ts";
+import { explain, makeReader, type Settings } from "./reader.ts";
 import { Transformer, type TransformParams } from "./transforms.ts";
 import { ODD_RNG, OddCompiler, oddReader, rewriteOddModels } from "./odd.ts";
 import type { Platform } from "./platform.ts";
@@ -152,7 +152,7 @@ export function serve(connection: Connection, platform: Platform): void {
         severity: DiagnosticSeverity.Error,
         code: p.code,
         source: kind === "xslt" ? "Urðr XSLT" : kind === "xpath" ? "Urðr XPath" : "Urðr XQuery",
-        message: where + p.message,
+        message: explain(where + p.message),
       };
     });
   }
@@ -185,7 +185,7 @@ export function serve(connection: Connection, platform: Platform): void {
         severity: i.severity === "warning" ? DiagnosticSeverity.Warning : i.severity === "info" ? DiagnosticSeverity.Information : DiagnosticSeverity.Error,
         code: i.constraint || undefined,
         source: `Urðr ${languageName(i.language)}`,
-        message: i.message,
+        message: explain(i.message),
       };
     });
     // Schemas the document names that could not be read: say so once, at
@@ -212,7 +212,7 @@ export function serve(connection: Connection, platform: Platform): void {
         range: range(text, 0, 1),
         severity: DiagnosticSeverity.Warning,
         source: "Urðr XML",
-        message: report.note || `Could not read ${needed.join(", ")}`,
+        message: explain(report.note || `Could not read ${needed.join(", ")}`),
       });
     }
     return out;
@@ -548,7 +548,10 @@ export function serve(connection: Connection, platform: Platform): void {
   // XSLT transformations, for the "Transform with XSLT" command and the
   // preview.
   const transformer = new Transformer(platform.spawn);
-  connection.onRequest("urdr/transform", (params: TransformParams) => transformer.transform(params, reader(), settings.transformTimeout * 1000));
+  connection.onRequest("urdr/transform", async (params: TransformParams) => {
+    const answer = await transformer.transform(params, reader(), settings.transformTimeout * 1000);
+    return { ...answer, problems: answer.problems.map((p) => ({ ...p, message: explain(p.message) })) };
+  });
   connection.onShutdown(() => transformer.stop());
 
   // "Evaluate XPath": the expression, run on the open document as a small
