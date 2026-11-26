@@ -20,6 +20,7 @@ import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
 import { tagNames } from "./elements.ts";
 import { idAt, idProblems, links } from "./ids.ts";
+import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
@@ -393,6 +394,29 @@ export function serve(connection: Connection, platform: Platform): void {
   const transformer = new Transformer(platform.spawn);
   connection.onRequest("urdr/transform", (params: TransformParams) => transformer.transform(params, reader(), settings.transformTimeout * 1000));
   connection.onShutdown(() => transformer.stop());
+
+  // "Evaluate XPath": the expression, run on the open document as a small
+  // stylesheet (xpath.ts).
+  connection.onRequest("urdr/evaluateXPath", async (params: { uri: string; expression: string }): Promise<XPathAnswer> => {
+    const doc = documents.get(params.uri);
+    if (!doc) return { count: 0, items: [], error: "The document is not open." };
+    const stylesheet = `urdr-xpath:${Date.now()}.xsl`;
+    const text = xpathStylesheet(params.expression, doc.getText());
+    const read = reader();
+    const answer = await transformer.transform(
+      { stylesheet, source: params.uri },
+      async (uri) => (uri === stylesheet ? text : read(uri)),
+      settings.transformTimeout * 1000,
+    );
+    if (answer.problems.length) {
+      return { count: 0, items: [], error: answer.problems.map((p) => p.message.replace(/ \(in urdr-xpath:[^)]*\)/g, "")).join("\n") };
+    }
+    try {
+      return JSON.parse(answer.results[0]?.text ?? "") as XPathAnswer;
+    } catch {
+      return { count: 0, items: [], error: "The answer could not be read." };
+    }
+  });
 
   // TEI ODD files, compiled with the TEI stylesheets that ship with the
   // extension.

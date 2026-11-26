@@ -131,6 +131,11 @@
         "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
       },
       {
+        "command": "urdr.evaluateXPath",
+        "title": { "value": "Evaluate XPath…", "original": "Evaluate XPath…" },
+        "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
+      },
+      {
         "command": "urdr.copyXPath",
         "title": { "value": "Copy XPath", "original": "Copy XPath" },
         "category": { "value": "Urðr-XML", "original": "Urdr-XML" }
@@ -193,6 +198,7 @@
         { "command": "urdr.joinElements", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.renameElement", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.copyXPath", "when": "editorLangId == xml || editorLangId == xsl" },
+        { "command": "urdr.evaluateXPath", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.compileOdd", "when": "resourceExtname == .odd" },
         { "command": "urdr.transform", "when": "editorLangId == xml || editorLangId == xsl" },
         { "command": "urdr.preview", "when": "editorLangId == xml || editorLangId == xsl" }
