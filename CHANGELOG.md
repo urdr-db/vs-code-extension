@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- When a schema or stylesheet given by web address can't be read, the
+  problem says why: the server's answer, downloads turned off, or, in
+  VS Code for the Web, the browser refusing it (http, or no CORS).
+- In VS Code for the Web, an `http` address is tried on `https` first.
+
 ## 0.6.1
 
 - The latest Urðr engine (f6e0a47): XSLT runs more than twice as fast.

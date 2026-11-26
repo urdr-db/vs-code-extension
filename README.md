@@ -211,9 +211,11 @@ output. `xsl:message` output goes to the **Urðr-XML: XSLT** output panel.
 
 ## Limitations
 
-- In VS Code for the Web (vscode.dev, github.dev), schemas named by web
-  address download only from sites that let browser pages read them
-  (CORS). Schemas in the workspace always work.
+- In VS Code for the Web (vscode.dev, github.dev), schemas and
+  stylesheets named by web address download only over https, from sites
+  that let browser pages read them (CORS). For an `http` address the
+  extension tries `https` first. Files in the workspace always work.
+  When a download fails, the problem says why.
 - `collection()` and `uri-collection()` aren't available in transformations.
 
 ## Reporting problems
