@@ -174,7 +174,12 @@ margins, not in the editor's theme), with scripts turned off. Pictures,
 fonts and stylesheets load
 from the workspace and from the web; a stylesheet linked by `http`
 address, which the preview may not load itself, is read by the extension
-and put in the page. Other results are shown as text.
+and put in the page. In VS Code for the Web, a stylesheet, picture or
+font from another site shows only if its server allows use by other
+sites, with the `Access-Control-Allow-Origin: *` and
+`Cross-Origin-Resource-Policy: cross-origin` headers; the bar on top of
+the preview names a stylesheet that could not be read. Other results are
+shown as text.
 
 The extension picks the stylesheet in this order:
 
