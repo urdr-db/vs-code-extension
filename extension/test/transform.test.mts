@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { TransformAnswer } from "../src/core.ts";
-import { expand, previewPage, stylesheetHref } from "../src/preview-html.ts";
+import { expand, inlineHttpStyles, previewPage, stylesheetHref } from "../src/preview-html.ts";
 import { threads } from "../src/node.ts";
 import { Transformer } from "../src/transforms.ts";
 
@@ -42,6 +42,20 @@ test("the preview page allows no scripts and shows problems on top", () => {
   const text = previewPage({ ...answer, messages: [], results: [{ href: "", text: "<a/>", method: "xml", mediaType: "application/xml" }] }, { cspSource: "s", base: "b/" });
   assert.match(text, /<pre>&lt;a\/&gt;<\/pre>/);
   assert.doesNotMatch(text, /urdr-bar/);
+});
+
+test("the preview puts stylesheets linked by http in place", async () => {
+  const css: Record<string, string> = {
+    "http://static.example/a.css": "body { background: url(img/bg.png) } @font-face { src: url('http://fonts.example/f.woff') } i { x: url(data:x) }",
+  };
+  const html = `<html><head><link rel="stylesheet" href="http://static.example/a.css"></link><link rel="stylesheet" href="http://static.example/gone.css" /><link rel="stylesheet" href="https://ok.example/b.css"/><link rel="icon" href="http://x/i.png"/></head></html>`;
+  const out = await inlineHttpStyles(html, async (u) => css[u]);
+  assert.match(out, /<style>\n\/\* http:\/\/static.example\/a.css \*\/\nbody \{ background: url\(https:\/\/static.example\/img\/bg.png\) \} @font-face \{ src: url\('https:\/\/fonts.example\/f.woff'\) \} i \{ x: url\(data:x\) \}\n<\/style><link/);
+  assert.doesNotMatch(out, /<\/link>/);
+  assert.match(out, /<link rel="stylesheet" href="https:\/\/static.example\/gone.css" \/>/);
+  assert.match(out, /href="https:\/\/ok.example\/b.css"/);
+  assert.match(out, /<link rel="icon" href="http:\/\/x\/i.png"\/>/);
+  assert.equal(await inlineHttpStyles("<p/>", async () => "x"), "<p/>");
 });
 
 test("runs a stylesheet in the worker, reading its include", async () => {

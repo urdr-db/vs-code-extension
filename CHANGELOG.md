@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The XSLT preview shows stylesheets the page links by `http` address,
+  and pictures on `http`.
+- The preview also updates when the stylesheet, the document or the files
+  beside them change on disk.
 - When a schema or stylesheet given by web address can't be read, the
   problem says why: the server's answer, downloads turned off, or, in
   VS Code for the Web, the browser refusing it (http, or no CORS).

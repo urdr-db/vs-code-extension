@@ -45,7 +45,7 @@ export interface PageOptions {
  * Scripts never run: the page allows none. */
 export function previewPage(answer: TransformAnswer, options: PageOptions): string {
   const csp =
-    `default-src 'none'; img-src ${options.cspSource} https: data:; media-src ${options.cspSource} https: data:; ` +
+    `default-src 'none'; img-src ${options.cspSource} https: http: data:; media-src ${options.cspSource} https: http: data:; ` +
     `style-src ${options.cspSource} https: 'unsafe-inline'; font-src ${options.cspSource} https: data:;`;
   const head = `<meta http-equiv="Content-Security-Policy" content="${csp}"><base href="${escapeHtml(options.base)}">`;
   const notes: string[] = [];
@@ -77,4 +77,44 @@ export function previewPage(answer: TransformAnswer, options: PageOptions): stri
     "body{margin:0;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground)}" +
     "pre{margin:0;padding:10px;font:var(--vscode-editor-font-size,13px)/1.5 var(--vscode-editor-font-family,monospace);white-space:pre-wrap}";
   return `<!DOCTYPE html><html><head>${head}<style>${style}</style></head><body>${bar}<pre>${escapeHtml(result.text)}</pre></body></html>`;
+}
+
+/** The page with each stylesheet it links by an http address put in
+ * place, as a webview (served over https) may not load one itself.
+ * `fetchText` reads an address, or gives undefined. A stylesheet that
+ * cannot be read is linked on https instead. Addresses inside the CSS
+ * are made absolute, and http ones https. */
+export async function inlineHttpStyles(html: string, fetchText: (url: string) => Promise<string | undefined>): Promise<string> {
+  const links = [...html.matchAll(/<link\b[^>]*>/gi)].filter((m) => /\brel\s*=\s*["']?stylesheet\b/i.test(m[0]) && /\bhref\s*=\s*["']?http:\/\//i.test(m[0]));
+  if (!links.length) return html;
+  const texts = await Promise.all(
+    links.map(async (m) => {
+      const href = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(m[0])!;
+      const url = (href[1] ?? href[2] ?? href[3])!.replace(/&amp;/g, "&");
+      const css = await fetchText(url).catch(() => undefined);
+      if (css === undefined) return m[0].replace(/http:\/\//i, "https://");
+      const media = /\bmedia\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(m[0]);
+      const absolute = css.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g, (all, q: string, ref: string) => {
+        if (/^(data|#)/i.test(ref)) return all;
+        let to: string;
+        try {
+          to = new URL(ref, url).href;
+        } catch {
+          return all;
+        }
+        return `url(${q}${to.replace(/^http:/i, "https:")}${q})`;
+      });
+      const at = absolute.replace(/@import\s+(["'])http:/gi, "@import $1https:").replace(/<\/style/gi, "<\\/style");
+      return `<style${media ? ` media="${media[1] ?? media[2]}"` : ""}>\n/* ${url} */\n${at}\n</style>`;
+    }),
+  );
+  let out = "";
+  let at = 0;
+  links.forEach((m, k) => {
+    out += html.slice(at, m.index) + texts[k];
+    at = m.index! + m[0].length;
+  });
+  out += html.slice(at);
+  // A <link></link> pair: drop the end tag left behind.
+  return out.replace(/(<\/style>)\s*<\/link>/gi, "$1");
 }
