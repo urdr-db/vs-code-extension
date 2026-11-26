@@ -7,7 +7,7 @@ import type { TransformAnswer } from "./core.ts";
 import { registerCaretPath } from "./caret.ts";
 import { registerEditing } from "./editing.ts";
 import { registerXPath } from "./xpath-command.ts";
-import { describe, expand, previewPage, stylesheetHref } from "./preview-html.ts";
+import { describe, expand, inlineHttpStyles, previewPage, stylesheetHref, stylesheetLinks } from "./preview-html.ts";
 import type { TransformParams } from "./transforms.ts";
 
 /** A transform saved in the settings (`urdr.transforms`). Paths are
@@ -287,13 +287,26 @@ class Preview {
       { enableScripts: false, localResourceRoots: roots },
     );
     this.watched = new Set([choice.stylesheet.toString(), ...(choice.source ? [choice.source.toString()] : [])]);
+    // The folders of the stylesheet and the document: what they include
+    // or read is most often beside them.
+    const folders = [...new Set([choice.stylesheet, ...(choice.source ? [choice.source] : [])].map((u) => vscode.Uri.joinPath(u, "..").toString()))];
+    const beside = (uri: vscode.Uri) => folders.includes(vscode.Uri.joinPath(uri, "..").toString());
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (this.watched.has(e.document.uri.toString())) this.schedule(300);
+        if (e.contentChanges.length && (this.watched.has(e.document.uri.toString()) || beside(e.document.uri))) this.schedule(300);
       }),
       // Included modules and documents read with doc() change on save.
       vscode.workspace.onDidSaveTextDocument(() => this.schedule(0)),
     );
+    // Changes made outside VS Code, such as by another editor or git.
+    for (const folder of folders) {
+      const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.parse(folder), "*"));
+      const changed = (uri: vscode.Uri) => {
+        // An open document's own edits are seen above.
+        if (!vscode.workspace.textDocuments.some((d) => d.uri.toString() === uri.toString() && d.isDirty)) this.schedule(300);
+      };
+      this.disposables.push(watcher, watcher.onDidChange(changed), watcher.onDidCreate(changed), watcher.onDidDelete(changed));
+    }
     this.panel.onDidDispose(() => {
       clearTimeout(this.timer);
       for (const d of this.disposables) d.dispose();
@@ -322,7 +335,46 @@ class Preview {
     const base = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(near, "..")).toString().replace(/\/?$/, "/");
     const failed = !answer.results.length;
     if (!failed) this.lastGood = answer;
-    const shown = failed && this.lastGood ? { ...this.lastGood, problems: answer.problems, messages: answer.messages } : answer;
-    this.panel.webview.html = previewPage(shown, { cspSource: this.panel.webview.cspSource, base, stale: failed && !!this.lastGood });
+    const shown = failed && this.lastGood ? { ...this.lastGood, problems: answer.problems, messages: answer.messages } : { ...answer };
+    const result = shown.results[0];
+    let linked: string[] = [];
+    if (result && (result.method === "html" || result.method === "xhtml")) {
+      const text = await inlineHttpStyles(result.text, (url) => this.css(url));
+      // The stylesheets still linked (by https) are read too, to see
+      // whether they colour the page.
+      const folder = vscode.Uri.joinPath(near, "..");
+      const read = (href: string): Promise<string | undefined> => {
+        if (/^https?:/i.test(href)) return this.css(href);
+        if (/^[a-z][\w+.-]*:/i.test(href)) return Promise.resolve(undefined);
+        const uri = vscode.Uri.joinPath(folder, href.replace(/[?#].*$/, ""));
+        return Promise.resolve(vscode.workspace.fs.readFile(uri)).then(
+          (bytes) => new TextDecoder().decode(bytes),
+          () => undefined,
+        );
+      };
+      linked = (await Promise.all(stylesheetLinks(text).map(read))).filter((t) => t !== undefined);
+      if (generation !== this.generation) return;
+      shown.results = [{ ...result, text }, ...shown.results.slice(1)];
+    }
+    this.panel.webview.html = previewPage(shown, { cspSource: this.panel.webview.cspSource, base, stale: failed && !!this.lastGood, linked });
+  }
+
+  /** Stylesheets the page links, as read, kept while the preview is open. */
+  private readonly styles = new Map<string, Promise<string | undefined>>();
+  private css(url: string): Promise<string | undefined> {
+    let p = this.styles.get(url);
+    if (!p) {
+      const get = async (u: string) => {
+        const r = await fetch(u, { redirect: "follow", signal: AbortSignal.timeout(10_000) });
+        return r.ok ? await r.text() : undefined;
+      };
+      // The address as given, then on https; in the browser, which
+      // refuses http, https only.
+      const https = url.replace(/^http:/i, "https:");
+      const first = vscode.env.uiKind === vscode.UIKind.Web && https !== url ? Promise.resolve(undefined) : get(url).catch(() => undefined);
+      p = first.then((t) => t ?? (https === url ? undefined : get(https).catch(() => undefined)));
+      this.styles.set(url, p);
+    }
+    return p;
   }
 }
