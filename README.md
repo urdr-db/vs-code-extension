@@ -52,6 +52,15 @@ closing tag. Hovering over an element or attribute shows the schema's
 documentation for it, such as the TEI Guidelines' description, along
 with its attributes and what it may contain.
 
+## Evaluate XPath
+
+**Evaluate XPath…** runs an XPath 3.1 expression on the open document,
+as Oxygen's XPath bar does. Names without a prefix are in the root
+element's namespace, so `//p` finds TEI paragraphs; the root's prefixes
+work too, and `tei:` in TEI documents. The results are listed with their
+path and text. Moving through the list shows each node in the editor,
+and Enter selects it. Values such as `count(//p)` are listed as they are.
+
 ## TEI ids
 
 In TEI documents, an `xml:id` and the `#id` pointers to it (in `ref`,

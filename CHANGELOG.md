@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Evaluate XPath…** runs an expression on the open document and lists
+  the results; moving through them shows each node.
 - TEI ids: go from `#id` to the element with that `xml:id` (also in
   another file), find and rename every pointer to an id, ids suggested
   after `#`, and ids given twice or missing flagged.

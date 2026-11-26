@@ -140,6 +140,16 @@ allowed (order and counts are not checked). Renaming is the LSP rename request, 
 from the same scan, which also answers linked editing. The status bar's
 caret path (`extension/src/caret.ts`) comes from the same scan too.
 
+## Evaluate XPath
+
+The expression runs as a small XSLT 3.0 stylesheet (`extension/src/xpath.ts`)
+in the same worker as transformations: the expression is the `select` of
+a variable, in a stylesheet that binds the root element's namespaces and
+makes its default namespace `xpath-default-namespace`, and answers in
+JSON with `fn:path` for each node and the value of anything else (the
+first 500 items, and the count of all). The client finds each path in
+the text with the same `locate` that places schema problems.
+
 ## TEI ids
 
 `extension/src/ids.ts` finds the `xml:id` values and the `#id` tokens in
