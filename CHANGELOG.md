@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.6.3
 
+- The latest Urðr engine (a68ee73): faster parsing, keys and output.
+  TEI Lite's ODD now compiles in about 6 seconds instead of 7. It also
+  brings XSLT fixes: `item-separator="#absent"`, `function-lookup` inside
+  `xsl:evaluate`, and `fn:transform` in static expressions.
 - When the XSLT preview can't read a stylesheet the page links on the
   web, its bar says so and why. In VS Code for the Web, that is most
   often a server that doesn't allow use by other sites: it needs the
