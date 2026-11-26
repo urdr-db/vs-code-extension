@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "xpath-attributes.injection.urdr",
+  "comment": "XPath colours in the attributes of XSLT and Schematron that hold an expression or pattern.",
+  "injectionSelector": "L:meta.tag -meta.tag.preprocessor -meta.tag.sgml -meta.embedded",
+  "patterns": [
+    {
+      "begin": "(?:^|\\s+)((?:(xsl)(:))?(select|test|match|use|group-by|group-adjacent|group-starting-with|group-ending-with|value|count|from|use-when|initial-value|context-item|xpath|with-params|namespace-context|for-each-item|for-each-source|as|context|path|subject))\\s*(=)\\s*(\")",
+      "beginCaptures": {
+        "2": {
+          "name": "entity.other.attribute-name.namespace.xml"
+        },
+        "3": {
+          "name": "punctuation.separator.namespace.xml"
+        },
+        "4": {
+          "name": "entity.other.attribute-name.localname.xml"
+        },
+        "6": {
+          "name": "string.quoted.double.xml punctuation.definition.string.begin.xml"
+        }
+      },
+      "end": "\"",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.xml punctuation.definition.string.end.xml"
+        }
+      },
+      "contentName": "meta.embedded.inline.xpath",
+      "patterns": [
+        {
+          "include": "source.xpath"
+        }
+      ]
+    },
+    {
+      "begin": "(?:^|\\s+)((?:(xsl)(:))?(select|test|match|use|group-by|group-adjacent|group-starting-with|group-ending-with|value|count|from|use-when|initial-value|context-item|xpath|with-params|namespace-context|for-each-item|for-each-source|as|context|path|subject))\\s*(=)\\s*(')",
+      "beginCaptures": {
+        "2": {
+          "name": "entity.other.attribute-name.namespace.xml"
+        },
+        "3": {
+          "name": "punctuation.separator.namespace.xml"
+        },
+        "4": {
+          "name": "entity.other.attribute-name.localname.xml"
+        },
+        "6": {
+          "name": "string.quoted.single.xml punctuation.definition.string.begin.xml"
+        }
+      },
+      "end": "'",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.single.xml punctuation.definition.string.end.xml"
+        }
+      },
+      "contentName": "meta.embedded.inline.xpath",
+      "patterns": [
+        {
+          "include": "source.xpath"
+        }
+      ]
+    }
+  ]
+}

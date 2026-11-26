@@ -2,7 +2,7 @@
 // Delete Element Tags, Split, Join, Rename).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deleteTags, elementAt, elements, join, split, tagNames, tags, type Edit } from "../src/elements.ts";
+import { deleteTags, elementAt, elements, join, pathAt, split, tagNames, tags, type Edit } from "../src/elements.ts";
 
 const DOC = `<?xml version="1.0"?><!DOCTYPE r [<!ENTITY a "<b>">]><r a="x>y"><!-- <c> --><p xml:id="p1" rend="i">one <hi>two</hi> <hi>three</hi></p><e/><![CDATA[<x>]]></r>`;
 const at = (s: string) => DOC.indexOf(s);
@@ -44,4 +44,12 @@ test("finds both names of an element to rename", () => {
   assert.equal(r[1]!.start, at("</hi>") + 2);
   assert.equal(tagNames(DOC, at("<e/>") + 1)!.length, 1);
   assert.equal(tagNames(DOC, at("two")), undefined);
+});
+
+test("gives the path of elements to the caret", () => {
+  const text = `<?xml version="1.0"?><TEI xmlns="http://www.tei-c.org/ns/1.0"><text><body><div><p>a</p></div><div><p>b</p><p>c <hi>d</hi></p><tei:note xmlns:tei="http://www.tei-c.org/ns/1.0"/></div></body></text></TEI>`;
+  assert.equal(pathAt(text, text.indexOf("d</hi>")), "/TEI/text/body/div[2]/p[2]/hi");
+  assert.equal(pathAt(text, text.indexOf("a</p>")), "/TEI/text/body/div[1]/p");
+  assert.equal(pathAt(text, text.indexOf("<tei:note") + 2), "/TEI/text/body/div[2]/tei:note");
+  assert.equal(pathAt(text, 3), undefined);
 });

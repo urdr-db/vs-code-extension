@@ -1,0 +1,139 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "XPath",
+  "scopeName": "source.xpath",
+  "comment": "XPath 3.1, for the expressions in XSLT and Schematron attributes. Entities stand for the characters XML attributes may not hold raw.",
+  "patterns": [
+    {
+      "include": "#expr"
+    }
+  ],
+  "repository": {
+    "expr": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#entity"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#axis"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "include": "#nodetype"
+        },
+        {
+          "include": "#function"
+        },
+        {
+          "include": "#attribute"
+        },
+        {
+          "include": "#operator"
+        },
+        {
+          "include": "#name"
+        }
+      ]
+    },
+    "comment": {
+      "name": "comment.block.xpath",
+      "begin": "\\(:",
+      "end": ":\\)",
+      "patterns": [
+        {
+          "include": "#comment"
+        }
+      ]
+    },
+    "entity": {
+      "name": "constant.character.entity.xml",
+      "match": "&(?:[a-zA-Z_][\\w.-]*|#\\d+|#x\\h+);"
+    },
+    "string": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.xpath",
+          "begin": "'",
+          "end": "'(?!')",
+          "patterns": [
+            {
+              "name": "constant.character.escape.xpath",
+              "match": "''"
+            },
+            {
+              "include": "#entity"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.xpath",
+          "begin": "\"|&quot;",
+          "end": "\"(?!\")|&quot;",
+          "patterns": [
+            {
+              "name": "constant.character.escape.xpath",
+              "match": "\"\""
+            },
+            {
+              "include": "#entity"
+            }
+          ]
+        }
+      ]
+    },
+    "number": {
+      "name": "constant.numeric.xpath",
+      "match": "(?<![\\w.$-])(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?(?![\\w.-])"
+    },
+    "variable": {
+      "name": "variable.other.xpath",
+      "match": "\\$(?:[\\w-]+:)?[\\w-]+(?:\\.[\\w-]+)*"
+    },
+    "axis": {
+      "name": "keyword.other.axis.xpath",
+      "match": "\\b(?:ancestor-or-self|ancestor|attribute|child|descendant-or-self|descendant|following-sibling|following|namespace|parent|preceding-sibling|preceding|self)(?=\\s*::)"
+    },
+    "keyword": {
+      "name": "keyword.operator.xpath",
+      "match": "(?<![\\w.$:@/\\[(,-])(?:and|or|div|idiv|mod|union|intersect|except|eq|ne|lt|le|gt|ge|is|to|in|return|then|else|satisfies|instance|of|treat|as|castable|cast)(?![\\w.:-])|(?<![\\w.$:@/\\[(,-])(?:for|let|some|every)(?=\\s+\\$)|(?<![\\w.$:@/-])(?:if)(?=\\s*\\()|(?<![\\w.$:@/-])(?:map|array|function)(?=\\s*[{(])"
+    },
+    "nodetype": {
+      "name": "support.type.xpath",
+      "match": "(?<![\\w.$:-])(?:node|text|comment|processing-instruction|element|attribute|document-node|schema-element|schema-attribute|namespace-node|item|empty-sequence)(?=\\s*\\((?!:))"
+    },
+    "function": {
+      "match": "(?<![\\w.$@-])((?:[\\w-]+:)?[\\w-]+(?:\\.[\\w-]+)*)\\s*(?=\\((?!:))",
+      "captures": {
+        "1": {
+          "name": "support.function.xpath"
+        }
+      }
+    },
+    "attribute": {
+      "name": "entity.other.attribute-name.xpath",
+      "match": "@(?:\\*|(?:[\\w-]+:)?[\\w.-]+|(?:[\\w-]+:)?\\*)"
+    },
+    "operator": {
+      "name": "keyword.operator.symbol.xpath",
+      "match": "!=|<=|>=|=>|\\|\\||:=|//|::|[=<>|!+*?/-]|&lt;=?|&gt;=?|&amp;"
+    },
+    "name": {
+      "name": "entity.name.tag.xpath",
+      "match": "(?<![\\w.$-])(?:[\\w-]+:)?[\\w-]+(?:\\.[\\w-]+)*"
+    }
+  }
+}

@@ -40,6 +40,9 @@ stylesheets they include or import and the library modules they import.
 They stop at the first error, as an XSLT or XQuery processor does, so
 fix one to see the next.
 XQuery files also get syntax colours, which VS Code doesn't have on its own.
+So does the XPath inside XSLT and Schematron: in `select`, `test`,
+`match` and the other attributes that hold an expression or pattern, and
+in the `{…}` of XSLT attribute value templates.
 
 ## Suggestions and hovers
 
@@ -67,6 +70,10 @@ In XML files these keys replace VS Code's own: `Ctrl+E` (Quick Open)
 and `Ctrl+/` (comment lines; `Ctrl+K Ctrl+C` still comments). To keep
 VS Code's keys, turn off `urdr.oxygenShortcuts`; the actions stay in the
 Command Palette.
+
+The status bar shows where the caret is, as a path of elements such as
+`/TEI/text/body/div[2]/p[3]`. Click it, or run **Copy XPath**, to copy
+the path.
 
 ## TEI ODD files
 

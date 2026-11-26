@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- XPath colours in XSLT and Schematron attributes and in XSLT attribute
+  value templates.
+- The status bar shows the caret's path of elements, and **Copy XPath**
+  copies it.
 - Releases no longer include `urdr-xml-examples.zip`.
 
 ## 0.5.1
