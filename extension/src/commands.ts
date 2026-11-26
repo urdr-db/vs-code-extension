@@ -7,7 +7,7 @@ import type { TransformAnswer } from "./core.ts";
 import { registerCaretPath } from "./caret.ts";
 import { registerEditing } from "./editing.ts";
 import { registerXPath } from "./xpath-command.ts";
-import { describe, expand, inlineHttpStyles, previewPage, stylesheetHref } from "./preview-html.ts";
+import { describe, expand, inlineHttpStyles, previewPage, stylesheetHref, stylesheetLinks } from "./preview-html.ts";
 import type { TransformParams } from "./transforms.ts";
 
 /** A transform saved in the settings (`urdr.transforms`). Paths are
@@ -337,15 +337,29 @@ class Preview {
     if (!failed) this.lastGood = answer;
     const shown = failed && this.lastGood ? { ...this.lastGood, problems: answer.problems, messages: answer.messages } : { ...answer };
     const result = shown.results[0];
+    let linked: string[] = [];
     if (result && (result.method === "html" || result.method === "xhtml")) {
       const text = await inlineHttpStyles(result.text, (url) => this.css(url));
+      // The stylesheets still linked (by https) are read too, to see
+      // whether they colour the page.
+      const folder = vscode.Uri.joinPath(near, "..");
+      const read = (href: string): Promise<string | undefined> => {
+        if (/^https?:/i.test(href)) return this.css(href);
+        if (/^[a-z][\w+.-]*:/i.test(href)) return Promise.resolve(undefined);
+        const uri = vscode.Uri.joinPath(folder, href.replace(/[?#].*$/, ""));
+        return Promise.resolve(vscode.workspace.fs.readFile(uri)).then(
+          (bytes) => new TextDecoder().decode(bytes),
+          () => undefined,
+        );
+      };
+      linked = (await Promise.all(stylesheetLinks(text).map(read))).filter((t) => t !== undefined);
       if (generation !== this.generation) return;
       shown.results = [{ ...result, text }, ...shown.results.slice(1)];
     }
-    this.panel.webview.html = previewPage(shown, { cspSource: this.panel.webview.cspSource, base, stale: failed && !!this.lastGood });
+    this.panel.webview.html = previewPage(shown, { cspSource: this.panel.webview.cspSource, base, stale: failed && !!this.lastGood, linked });
   }
 
-  /** Stylesheets read by http for the page, kept while the preview is open. */
+  /** Stylesheets the page links, as read, kept while the preview is open. */
   private readonly styles = new Map<string, Promise<string | undefined>>();
   private css(url: string): Promise<string | undefined> {
     let p = this.styles.get(url);
@@ -356,9 +370,9 @@ class Preview {
       };
       // The address as given, then on https; in the browser, which
       // refuses http, https only.
-      const https = "https:" + url.slice(5);
-      const first = vscode.env.uiKind === vscode.UIKind.Web ? Promise.resolve(undefined) : get(url).catch(() => undefined);
-      p = first.then((t) => t ?? get(https).catch(() => undefined));
+      const https = url.replace(/^http:/i, "https:");
+      const first = vscode.env.uiKind === vscode.UIKind.Web && https !== url ? Promise.resolve(undefined) : get(url).catch(() => undefined);
+      p = first.then((t) => t ?? (https === url ? undefined : get(https).catch(() => undefined)));
       this.styles.set(url, p);
     }
     return p;

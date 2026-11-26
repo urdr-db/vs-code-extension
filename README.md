@@ -169,7 +169,9 @@ XSLT files.
 the editor) shows the result next to the document, and updates it as you
 edit the document or the stylesheet, and when they or the files beside
 them change on disk, such as after a `git pull`. HTML results are shown
-as a page, with scripts turned off. Pictures, fonts and stylesheets load
+as a page, as a browser shows it (on white, in the browser's fonts and
+margins, not in the editor's theme), with scripts turned off. Pictures,
+fonts and stylesheets load
 from the workspace and from the web; a stylesheet linked by `http`
 address, which the preview may not load itself, is read by the extension
 and put in the page. Other results are shown as text.

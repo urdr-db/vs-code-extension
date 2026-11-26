@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { TransformAnswer } from "../src/core.ts";
-import { expand, inlineHttpStyles, previewPage, stylesheetHref } from "../src/preview-html.ts";
+import { expand, inlineHttpStyles, paintsBackground, previewPage, stylesheetHref, stylesheetLinks } from "../src/preview-html.ts";
 import { threads } from "../src/node.ts";
 import { Transformer } from "../src/transforms.ts";
 
@@ -107,4 +107,23 @@ test("the web bundles need nothing from Node", async () => {
     const code = await readFile(join(here, "..", "out", "web", `${name}.js`), "utf8");
     assert.doesNotMatch(code, /require\("(node:)?(fs|path|url|crypto|worker_threads|child_process|net|os)(\/[a-z]+)?"\)/, `out/web/${name}.js`);
   }
+});
+
+test("the preview shows an HTML result as a browser does", () => {
+  const answer = (text: string): TransformAnswer => ({ results: [{ href: "", text, method: "xhtml", mediaType: "text/html" }], messages: [], problems: [], needed: [] });
+  const options = { cspSource: "s", base: "b/" };
+  // The editor's colours, font and padding are undone, and the window is
+  // white, ahead of the page's own styles.
+  const plain = previewPage(answer("<html><head><style>p{color:red}</style></head><body><p>Hi</p></body></html>"), options);
+  assert.match(plain, /<base href="b\/"><style id="urdr-browser-defaults">:root\{color-scheme:light;color:#000;[^<]*body\{[^}]*padding:revert\}[^<]*:root\{background:#fff\}<\/style><style>p\{color:red\}/);
+  // A page that colours its body keeps the colour on the whole window.
+  const coloured = previewPage(answer("<html><head><style>/* body{background:red} */ html, body.Content { margin: 0; background-color: #f5f0e8 }</style></head><body/></html>"), options);
+  assert.match(coloured, /urdr-browser-defaults/);
+  assert.doesNotMatch(coloured, /:root\{background:#fff\}/);
+  assert.doesNotMatch(previewPage(answer(`<html><body style="background: navy"/></html>`), options), /:root\{background:#fff\}/);
+  assert.doesNotMatch(previewPage(answer("<html><head></head><body/></html>"), { ...options, linked: ["@media screen { body { background: url(x.png) } }"] }), /:root\{background:#fff\}/);
+  // Other elements' backgrounds, and none, do not count.
+  assert.equal(paintsBackground("<style>body div { background: red } .body { background: red } body { background: transparent }</style>"), false);
+  assert.equal(paintsBackground("<style>main, :root { background-image: linear-gradient(red, blue) }</style>"), true);
+  assert.deepEqual(stylesheetLinks(`<link rel="stylesheet" href="a.css?x=1&amp;y=2"><link rel=icon href=i.png><link href='https://x/b.css' rel='stylesheet'/>`), ["a.css?x=1&y=2", "https://x/b.css"]);
 });

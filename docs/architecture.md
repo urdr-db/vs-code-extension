@@ -112,9 +112,16 @@ replaced and the error says so.
 The extension side (`extension/src/commands.ts`) picks the stylesheet,
 asks the server with the `urdr/transform` request, and writes the results
 or shows them. The preview is a webview with scripts off, allowed to load
-only files from the workspace and the document's folder; its page
+files from the workspace and the document's folder, and from the web; its page
 (`extension/src/preview-html.ts`) adds a content security policy and a
 `<base>` so relative links and pictures resolve next to the document.
+VS Code puts its own styles first in every webview (the editor's colours,
+font and padding, a transparent background); for an HTML result the page
+undoes them, ahead of the result's own styles, and gives the window a
+white background unless the result's styles, or the stylesheets it links
+(which the extension reads), colour `html` or `body`. Stylesheets linked
+by `http`, which a webview may not load, are read by the extension and
+put in the page.
 
 ## ODD files
 
