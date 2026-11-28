@@ -200,7 +200,7 @@ fn need(needed: &Mutex<BTreeSet<String>>, uri: &str) {
 struct Documents {
     files: HashMap<String, String>,
     space: SpaceRules,
-    parsed: Mutex<HashMap<String, NodeHandle>>,
+    parsed: Mutex<HashMap<String, urdr_xdm::SentNode>>,
     needed: Arc<Mutex<BTreeSet<String>>>,
 }
 
@@ -219,7 +219,7 @@ impl AvailableDocuments for Documents {
     fn doc(&self, uri: &str) -> Result<NodeHandle, DynamicError> {
         let mut parsed = self.parsed.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(n) = parsed.get(uri) {
-            return Ok(n.clone());
+            return Ok(n.to_local());
         }
         let text = self
             .files
@@ -241,7 +241,7 @@ impl AvailableDocuments for Documents {
             )
         })?;
         let node = tree.root_handle();
-        parsed.insert(uri.to_owned(), node.clone());
+        parsed.insert(uri.to_owned(), node.to_sent());
         Ok(node)
     }
 

@@ -3,6 +3,10 @@
 //!
 //! The `#[wasm_bindgen]` marker writes glue with `#[unsafe(no_mangle)]`
 //! export markers, the only unsafe code in the crate.
+//!
+//! The names differ from those `urdr-validate-wasm` exports (its
+//! `checkXquery`, `checkXpath`, `checkXslt`), which are linked into the
+//! same module: two exports of one name don't build.
 #![allow(unsafe_code)]
 
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -35,21 +39,21 @@ pub fn validate_document(request: &str) -> String {
 }
 
 /// Checks an XQuery module.
-#[wasm_bindgen(js_name = checkXquery)]
+#[wasm_bindgen(js_name = checkQuery)]
 #[must_use]
 pub fn check_xquery(request: &str) -> String {
     answer(request, crate::check_xquery)
 }
 
 /// Checks an XPath expression.
-#[wasm_bindgen(js_name = checkXpath)]
+#[wasm_bindgen(js_name = checkExpression)]
 #[must_use]
 pub fn check_xpath(request: &str) -> String {
     answer(request, crate::check_xpath)
 }
 
 /// Checks an XSLT stylesheet.
-#[wasm_bindgen(js_name = checkXslt)]
+#[wasm_bindgen(js_name = checkStylesheet)]
 #[must_use]
 pub fn check_xslt(request: &str) -> String {
     answer(request, crate::check_xslt)

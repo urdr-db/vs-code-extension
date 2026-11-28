@@ -1,5 +1,5 @@
 // The Rust core, compiled to WebAssembly, and the checks it runs.
-import { initSync, validateDocument, checkXquery, checkXpath, checkXslt, schemaOutline, transformXslt } from "../wasm/urdr_vscode_core.js";
+import { initSync, validateDocument, checkQuery, checkExpression, checkStylesheet, schemaOutline, transformXslt } from "../wasm/urdr_vscode_core.js";
 import { converse, type Reader } from "./converse.ts";
 import type { SchemaHint } from "./hints.ts";
 import type { Outline } from "./suggest.ts";
@@ -36,9 +36,9 @@ export interface CoreAnswer {
 export type Kind = "xquery" | "xpath" | "xslt";
 
 const checks: Record<Kind, (request: string) => string> = {
-  xquery: checkXquery,
-  xpath: checkXpath,
-  xslt: checkXslt,
+  xquery: checkQuery,
+  xpath: checkExpression,
+  xslt: checkStylesheet,
 };
 
 /** Checks a query or stylesheet, reading the modules it imports. */
