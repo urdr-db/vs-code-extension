@@ -119,3 +119,22 @@ fn a_document_is_validated_as_urdr_validates_it() {
         serde_json::from_str(&validate_json(&request.to_string())).unwrap();
     assert_eq!(answer["status"], "invalid", "{answer}");
 }
+
+#[test]
+fn builtin_functions_come_from_the_engine() {
+    let list: serde_json::Value =
+        serde_json::from_str(&urdr_vscode_core::builtin_functions_json()).unwrap();
+    let list = list.as_array().unwrap();
+    assert!(list.len() > 100);
+    let find = |prefix: &str, name: &str| {
+        list.iter()
+            .find(|f| f["prefix"] == prefix && f["name"] == name)
+            .cloned()
+    };
+    let abs = find("fn", "abs").unwrap();
+    assert_eq!(abs["arities"], serde_json::json!([1]));
+    assert_eq!(abs["namespace"], "http://www.w3.org/2005/xpath-functions");
+    assert_eq!(find("fn", "concat").unwrap()["variadicFrom"], 2);
+    assert!(find("map", "get").is_some());
+    assert!(find("fn", "no-such-function").is_none());
+}
