@@ -3,8 +3,8 @@
 ## 0.7.1
 
 - A stylesheet that includes or imports many modules, such as the TEI
-  Stylesheets' HTML (`html/html.xsl`, some thirty modules), runs and is
-  checked again. The extension read one module per round and gave up
+  Stylesheets' HTML (`html/html.xsl`, some thirty modules), now runs
+  and is checked in full. The extension read one module per round and gave up
   after 25, so TEI to HTML gave an empty result with no problem shown.
   It now reads the whole tree of includes first, and says so when a
   transformation stops while it still needs a file.
