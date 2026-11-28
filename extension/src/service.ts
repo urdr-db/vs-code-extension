@@ -20,6 +20,7 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { builtins, check, outline, validate, type Kind } from "./core.ts";
 import { suggestQuery } from "./xquery-complete.ts";
+import { prefetchModules } from "./prefetch.ts";
 import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
@@ -136,7 +137,8 @@ export function serve(connection: Connection, platform: Platform): void {
   }
 
   async function codeDiagnostics(kind: Kind, uri: string, text: string, read: ReturnType<typeof makeReader>): Promise<Diagnostic[]> {
-    const answer = await check(kind, uri, text, read);
+    const known = kind === "xpath" ? {} : await prefetchModules(kind, uri, text, read);
+    const answer = await check(kind, uri, text, read, known);
     return answer.problems.map((p) => {
       let start = 0;
       let end = 1;

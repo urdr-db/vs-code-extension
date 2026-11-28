@@ -42,10 +42,11 @@ const checks: Record<Kind, (request: string) => string> = {
   xslt: checkStylesheet,
 };
 
-/** Checks a query or stylesheet, reading the modules it imports. */
-export function check(kind: Kind, uri: string, text: string, read: Reader): Promise<CoreAnswer> {
+/** Checks a query or stylesheet, reading the modules it imports;
+ * `files` may hold some already read (prefetch.ts). */
+export function check(kind: Kind, uri: string, text: string, read: Reader, files: Record<string, string> = {}): Promise<CoreAnswer> {
   ready();
-  return converse((files) => JSON.parse(checks[kind](JSON.stringify({ text, uri, files }))) as CoreAnswer, read);
+  return converse((f) => JSON.parse(checks[kind](JSON.stringify({ text, uri, files: f }))) as CoreAnswer, read, files);
 }
 
 /** A problem a validator found. */
