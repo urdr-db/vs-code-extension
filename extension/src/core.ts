@@ -1,8 +1,9 @@
 // The Rust core, compiled to WebAssembly, and the checks it runs.
-import { initSync, validateDocument, checkQuery, checkExpression, checkStylesheet, schemaOutline, transformXslt } from "../wasm/urdr_vscode_core.js";
+import { initSync, validateDocument, checkQuery, checkExpression, checkStylesheet, schemaOutline, transformXslt, builtinFunctions } from "../wasm/urdr_vscode_core.js";
 import { converse, type Reader } from "./converse.ts";
 import type { SchemaHint } from "./hints.ts";
 import type { Outline } from "./suggest.ts";
+import type { Builtin } from "./xquery-complete.ts";
 
 let loaded = false;
 
@@ -128,4 +129,13 @@ export interface TransformAnswer {
 export function transformOnce(request: string): string {
   ready();
   return transformXslt(request);
+}
+
+let builtinList: Builtin[] | undefined;
+
+/** The engine's built-in functions, for suggestions in queries. */
+export function builtins(): readonly Builtin[] {
+  ready();
+  builtinList ??= JSON.parse(builtinFunctions()) as Builtin[];
+  return builtinList;
 }

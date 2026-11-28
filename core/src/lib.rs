@@ -338,3 +338,36 @@ pub fn validate_json(request: &str) -> String {
         })),
     }
 }
+
+/// The built-in functions a query may call, for suggestions: the engine's
+/// own table, so the extension never suggests a function the checks
+/// reject. A JSON array of
+/// `{"prefix", "name", "namespace", "arities", "variadicFrom"}`, where
+/// `arities` lists the counts of arguments accepted below `variadicFrom`
+/// (null unless the function takes that many or more, as `fn:concat`).
+#[must_use]
+pub fn builtin_functions_json() -> String {
+    let version = Version::default();
+    let list: Vec<Value> = urdr_xq_functions::signatures::FUNCTIONS
+        .iter()
+        .filter_map(|f| {
+            let all = f.arities_in(version);
+            if all.is_empty() {
+                return None;
+            }
+            let variadic = f.variadic_from();
+            let arities: Vec<usize> = all
+                .into_iter()
+                .filter(|&n| variadic.is_none_or(|min| n < min))
+                .collect();
+            Some(json!({
+                "prefix": f.namespace.prefix(),
+                "name": f.local,
+                "namespace": f.namespace.uri(),
+                "arities": arities,
+                "variadicFrom": variadic,
+            }))
+        })
+        .collect();
+    Value::Array(list).to_string()
+}

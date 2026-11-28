@@ -86,10 +86,29 @@
           "default": "",
           "markdownDescription": "The TEI source that ODD files compile against (`p5subset.xml`), as a path or URL. Empty uses the one that ships with the extension (TEI P5 4.12.0)."
         },
+        "urdr.autoCloseTags": {
+          "type": "boolean",
+          "default": true,
+          "scope": "language-overridable",
+          "markdownDescription": "Close tags as they are typed in XML and XSLT files: `>` at the end of a start tag adds its end tag after the cursor, and `</` adds the name of the element still open."
+        },
+        "urdr.keymap": {
+          "type": "string",
+          "enum": ["oxygen", "xmlspy", "vscode"],
+          "enumItemLabels": ["Oxygen", "XMLSpy", "VS Code"],
+          "enumDescriptions": [
+            "The keys of Oxygen XML Editor: Surround with Tags (Ctrl+E), Surround with the Last Tag (Ctrl+/), Delete Element Tags (Alt+Shift+X), Split Element (Alt+Shift+D), Join Elements (Alt+Shift+J), Format and Indent (Ctrl+Shift+P) and Toggle Comment (Ctrl+Shift+,). Oxygen's line keys are left to VS Code, which uses them for several cursors.",
+            "The keys of Altova XMLSpy: the problems list (F7 and F8, where XMLSpy checks and validates) and Transform with XSLT… (F10).",
+            "VS Code's own keys: the extension adds none. The actions are still in the Command Palette."
+          ],
+          "default": "oxygen",
+          "markdownDescription": "Which XML editor's keys the element actions and editing commands take in XML and XSLT editors, as Urðr Studio's keymap presets do. Where a preset uses a key, it replaces VS Code's own use of it in those editors; `F1` always opens the Command Palette."
+        },
         "urdr.oxygenShortcuts": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Give the element actions Oxygen XML Editor's keys in XML editors: Surround with Tags (`Ctrl+E`), Surround with the Last Tag (`Ctrl+/`), Delete Element Tags (`Alt+Shift+X`), Split Element (`Alt+Shift+D`), Join Elements (`Alt+Shift+J`), Format and Indent (`Ctrl+Shift+P`). They replace VS Code's own uses of these keys there. Off, the actions are still in the Command Palette."
+          "markdownDescription": "Give the element actions Oxygen XML Editor's keys in XML editors.",
+          "markdownDeprecationMessage": "Use `#urdr.keymap#` instead. Turned off, it still turns the Oxygen keys off."
         },
         "urdr.transform.timeout": {
           "type": "number",
@@ -174,12 +193,16 @@
       }
     ],
     "keybindings": [
-      { "command": "urdr.surroundWithTags", "key": "ctrl+e", "mac": "cmd+e", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.surroundWithLastTag", "key": "ctrl+/", "mac": "cmd+/", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.deleteElementTags", "key": "alt+shift+x", "mac": "cmd+alt+x", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.splitElement", "key": "alt+shift+d", "mac": "ctrl+alt+d", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.joinElements", "key": "alt+shift+j", "mac": "cmd+alt+j", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" },
-      { "command": "urdr.formatAndIndent", "key": "ctrl+shift+p", "mac": "cmd+shift+p", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.oxygenShortcuts" }
+      { "command": "urdr.surroundWithTags", "key": "ctrl+e", "mac": "cmd+e", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.surroundWithLastTag", "key": "ctrl+/", "mac": "cmd+/", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.deleteElementTags", "key": "alt+shift+x", "mac": "cmd+alt+x", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.splitElement", "key": "alt+shift+d", "mac": "ctrl+alt+d", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.joinElements", "key": "alt+shift+j", "mac": "cmd+alt+j", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "urdr.formatAndIndent", "key": "ctrl+shift+p", "mac": "cmd+shift+p", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "editor.action.commentLine", "key": "ctrl+shift+,", "mac": "cmd+shift+,", "when": "editorTextFocus && !editorReadonly && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'oxygen' && config.urdr.oxygenShortcuts" },
+      { "command": "workbench.actions.view.problems", "key": "f7", "when": "editorTextFocus && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'xmlspy'" },
+      { "command": "workbench.actions.view.problems", "key": "f8", "when": "editorTextFocus && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'xmlspy'" },
+      { "command": "urdr.transform", "key": "f10", "when": "editorTextFocus && (editorLangId == xml || editorLangId == xsl) && config.urdr.keymap == 'xmlspy' && !inDebugMode" }
     ],
     "menus": {
       "editor/title": [

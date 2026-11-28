@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import type { BaseLanguageClient } from "vscode-languageclient";
 import type { TransformAnswer } from "./core.ts";
 import { registerCaretPath } from "./caret.ts";
+import { registerCloseTags } from "./close-tags.ts";
 import { registerEditing } from "./editing.ts";
 import { registerXPath } from "./xpath-command.ts";
 import { describe, expand, inlineHttpStyles, previewPage, stylesheetHref, stylesheetLinks } from "./preview-html.ts";
@@ -138,6 +139,7 @@ async function save(choice: Choice): Promise<void> {
 
 export function register(context: vscode.ExtensionContext, client: () => BaseLanguageClient | undefined): void {
   registerEditing(context, client);
+  registerCloseTags(context);
   registerCaretPath(context);
   registerXPath(context, client);
   const log = vscode.window.createOutputChannel("Urðr-XML: XSLT");

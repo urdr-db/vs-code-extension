@@ -18,7 +18,8 @@ import {
   TextDocumentSyncKind,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { check, outline, validate, type Kind } from "./core.ts";
+import { builtins, check, outline, validate, type Kind } from "./core.ts";
+import { suggestQuery } from "./xquery-complete.ts";
 import { readDocs } from "./docs.ts";
 import { schemaHints } from "./hints.ts";
 import { hover, Index, mayHold, selectionContent, suggest } from "./suggest.ts";
@@ -31,6 +32,7 @@ import { xqueryModule } from "./xquery-symbols.ts";
 import { idAt, idProblems, links } from "./ids.ts";
 import { xpathStylesheet, type XPathAnswer } from "./xpath.ts";
 import { contextAt } from "./context.ts";
+import { documentOutline } from "./document-outline.ts";
 import { locate } from "./locate.ts";
 import { byteToIndex, indexToPosition, lineColumnToIndex, wordEnd } from "./positions.ts";
 import { explain, makeReader, type Settings } from "./reader.ts";
@@ -52,7 +54,7 @@ export function serve(connection: Connection, platform: Platform): void {
     return {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Incremental,
-        completionProvider: { triggerCharacters: ["<", "/", " ", '"', "'", ":"] },
+        completionProvider: { triggerCharacters: ["<", "/", " ", '"', "'", ":", "$"] },
         hoverProvider: true,
         renameProvider: { prepareProvider: true },
         definitionProvider: true,
@@ -249,6 +251,8 @@ export function serve(connection: Connection, platform: Platform): void {
     return p;
   }
 
+  const NO_DOCS = { elements: new Map<string, string>(), attributes: new Map<string, string>() };
+
   const KINDS = {
     element: CompletionItemKind.Class,
     close: CompletionItemKind.Class,
@@ -258,16 +262,19 @@ export function serve(connection: Connection, platform: Platform): void {
 
   connection.onCompletion(async (params): Promise<CompletionItem[]> => {
     const doc = documents.get(params.textDocument.uri);
-    if (!doc || kindOf(doc) !== "xml") return [];
+    if (!doc) return [];
+    if (kindOf(doc) === "xquery") return queryCompletion(doc, params.position, params.context?.triggerKind === 1);
+    if (kindOf(doc) !== "xml") return [];
     const text = doc.getText();
     const offset = doc.offsetAt(params.position);
     const ids = idsAfterHash(doc, text, offset, params.position);
-    const index = await indexFor(doc).catch(() => undefined);
-    if (!index) return ids;
+    const schema = await indexFor(doc).catch(() => undefined);
+    // Without a schema, the names the document already uses.
+    const index = schema ?? new Index(documentOutline(text, offset), NO_DOCS);
     return [...ids, ...suggest(text, offset, index).map((s, i) => ({
       label: s.label,
       kind: KINDS[s.kind],
-      detail: s.detail,
+      detail: schema || s.kind === "close" ? s.detail : "used in this document",
       documentation: s.documentation ? { kind: MarkupKind.Markdown, value: s.documentation } : undefined,
       // Required attributes first, then the schema's order.
       sortText: `${s.required ? "0" : "1"}${String(i).padStart(5, "0")}`,
@@ -276,6 +283,30 @@ export function serve(connection: Connection, platform: Platform): void {
       command: s.retrigger ? { title: "Suggest values", command: "editor.action.triggerSuggest" } : undefined,
     }))];
   });
+
+  const QUERY_KINDS = {
+    keyword: CompletionItemKind.Keyword,
+    function: CompletionItemKind.Function,
+    variable: CompletionItemKind.Variable,
+    prefix: CompletionItemKind.Module,
+  } as const;
+
+  /** In an XQuery file: keywords, functions and variables. */
+  async function queryCompletion(doc: TextDocument, position: { line: number; character: number }, explicit: boolean): Promise<CompletionItem[]> {
+    const modules = await modulesOf(doc, false).catch(() => undefined);
+    if (!modules) return [];
+    const offset = doc.offsetAt(position);
+    return suggestQuery(modules, offset, builtins(), explicit).map((s) => ({
+      label: s.label,
+      kind: QUERY_KINDS[s.kind],
+      detail: s.detail,
+      documentation: s.documentation,
+      sortText: `${s.rank}${s.label}`,
+      insertTextFormat: InsertTextFormat.Snippet,
+      textEdit: { range: { start: doc.positionAt(s.start), end: position }, newText: s.insert },
+      command: s.retrigger ? { title: "Suggest", command: "editor.action.triggerSuggest" } : undefined,
+    }));
+  }
 
   /** After `#` in an attribute value, the document's ids. */
   function idsAfterHash(doc: TextDocument, text: string, offset: number, position: { line: number; character: number }): CompletionItem[] {
@@ -529,9 +560,11 @@ export function serve(connection: Connection, platform: Platform): void {
   connection.onRequest("urdr/elementsAt", async (params: { uri: string; offset: number; end?: number }) => {
     const doc = markup(params.uri);
     if (!doc) return [];
-    const index = await indexFor(doc).catch(() => undefined);
-    if (!index) return [];
     const text = doc.getText();
+    const schema = await indexFor(doc).catch(() => undefined);
+    // Without a schema, the names the document already uses, ungrouped:
+    // what fits is known only from a schema.
+    const index = schema ?? new Index(documentOutline(text), NO_DOCS);
     const content = params.end !== undefined && params.end > params.offset ? selectionContent(text, params.offset, params.end) : undefined;
     const grouped = content && (content.text || content.elements.length > 0) ? content : undefined;
     const typed = text.slice(0, params.offset) + "<" + text.slice(params.offset);
@@ -540,8 +573,8 @@ export function serve(connection: Connection, platform: Platform): void {
       .map((s) => ({
         name: s.label,
         required: [...s.insert.matchAll(/ ([^\s=]+)="\$\d+"/g)].map((m) => m[1]!),
-        detail: s.detail,
-        fits: grouped && s.name ? mayHold(index.element(s.name), grouped) : undefined,
+        detail: schema ? s.detail : "used in this document",
+        fits: schema && grouped && s.name ? mayHold(index.element(s.name), grouped) : undefined,
       }));
   });
 

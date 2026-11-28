@@ -3,7 +3,7 @@
 // Join Elements, Rename Element, Format and Indent, Select Element and
 // Go to Matching Tag. Each is a command in the Command
 // Palette; package.json gives them Oxygen's keys while the setting
-// urdr.oxygenShortcuts is on.
+// urdr.keymap is "oxygen" (and the older urdr.oxygenShortcuts is on).
 import * as vscode from "vscode";
 import type { BaseLanguageClient, TextEdit } from "vscode-languageclient";
 import { deleteTags, join, matchingTag, selectElement, split, type Edit } from "./elements.ts";

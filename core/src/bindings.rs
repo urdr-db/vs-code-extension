@@ -78,3 +78,10 @@ pub fn schema_outline(request: &str) -> String {
 pub fn transform_xslt(request: &str) -> String {
     crate::transform::transform_json(request)
 }
+
+/// The built-in functions, for suggestions in queries.
+#[wasm_bindgen(js_name = builtinFunctions)]
+#[must_use]
+pub fn builtin_functions() -> String {
+    crate::builtin_functions_json()
+}

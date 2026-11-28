@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **XQuery suggestions**: the engine's built-in functions (with `map:`,
+  `array:` and the other prefixes), keywords, the functions and global
+  variables of the module and the library modules it imports, and the
+  variables in scope after `$`.
+- **Suggestions without a schema**: a document that names none gets the
+  elements, attributes and values it already uses, as in Urðr Studio.
+  Surround with Tags lists them too.
+- **Tags close as you type**: `>` at the end of a start tag adds its end
+  tag, and `</` adds the name of the open element. `urdr.autoCloseTags`
+  turns it off.
+- **Keymap presets**: `urdr.keymap` gives the element actions Oxygen's
+  keys (the default, as before, now with `Ctrl+Shift+,` to comment),
+  XMLSpy's (`F7` and `F8` open the problems, `F10` transforms) or none.
+  It replaces `urdr.oxygenShortcuts`, which still turns Oxygen's keys
+  off.
 - The latest Urðr engine (470b34d). XSLT runs faster again: a function
   or template body is prepared once and then run from that form,
   `xsl:copy-of` copies each node once, and `$s[current()]` picks the item
