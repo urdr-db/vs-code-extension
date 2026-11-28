@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- The latest Urðr engine (470b34d). XSLT runs faster again: a function
+  or template body is prepared once and then run from that form,
+  `xsl:copy-of` copies each node once, and `$s[current()]` picks the item
+  instead of testing every one. XSLT fixes: a static error in an
+  expression, such as an undeclared variable, now says the line and
+  column it is on; a global variable that binds a variable of its own
+  name is no longer refused; and `xsl:number` with `α` counts the final
+  sigma, as other processors do.
+
 ## 0.6.3
 
 - The latest Urðr engine (a68ee73): faster parsing, keys and output.
