@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1
+
+- A stylesheet that includes or imports many modules, such as the TEI
+  Stylesheets' HTML (`html/html.xsl`, some thirty modules), runs and is
+  checked again. The extension read one module per round and gave up
+  after 25, so TEI to HTML gave an empty result with no problem shown.
+  It now reads the whole tree of includes first, and says so when a
+  transformation stops while it still needs a file.
+
 ## 0.7.0
 
 - **XQuery suggestions**: the engine's built-in functions (with `map:`,
@@ -17,12 +26,6 @@
   XMLSpy's (`F7` and `F8` open the problems, `F10` transforms) or none.
   It replaces `urdr.oxygenShortcuts`, which still turns Oxygen's keys
   off.
-- A stylesheet that includes or imports many modules, such as the TEI
-  Stylesheets' HTML (`html/html.xsl`, some thirty modules), runs and is
-  checked again. The extension read one module per round and gave up
-  after 25, so TEI to HTML gave an empty result with no problem shown.
-  It now reads the whole tree of includes first, and says so when a
-  transformation stops while it still needs a file.
 - The latest Urðr engine (470b34d). XSLT runs faster again: a function
   or template body is prepared once and then run from that form,
   `xsl:copy-of` copies each node once, and `$s[current()]` picks the item
