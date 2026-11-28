@@ -42,6 +42,10 @@ every related file it has read so far; the core answers with the
 problems it found and the files it still needs (`needed`); the server
 reads those and asks again, until nothing new is needed
 (`extension/src/converse.ts`).
+For stylesheets and queries, the modules they include or import are read
+first, by the same scan as code navigation (`extension/src/prefetch.ts`):
+the core stops at the first module it lacks, so without that a tree of
+thirty modules would take thirty rounds.
 
 The server reads needed files from open editors first, then the
 workspace, then the web for `http(s)` addresses (`extension/src/reader.ts`). Each

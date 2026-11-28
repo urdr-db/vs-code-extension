@@ -2,6 +2,7 @@
 // thread, with a time limit, reading the modules and documents the
 // stylesheet asks for.
 import { converse, type Reader } from "./converse.ts";
+import { prefetchModules } from "./prefetch.ts";
 import type { CoreProblem, TransformAnswer, TransformRequest } from "./core.ts";
 import type { Spawn, WorkerHandle, WorkerReply } from "./platform.ts";
 
@@ -136,10 +137,18 @@ export class Transformer {
     };
     const until = Date.now() + timeout;
     try {
-      return await converse(
+      const known = await prefetchModules("xslt", params.stylesheet, stylesheetText, read);
+      const answer = await converse(
         async (files) => JSON.parse(await this.call(JSON.stringify({ ...request, files }), Math.max(1, until - Date.now()))) as TransformAnswer,
         read,
+        known,
       );
+      // Out of rounds with files still wanted: say so, rather than show an
+      // empty result.
+      if (!answer.results.length && !answer.problems.length && answer.needed.length) {
+        return problem(`The transformation stopped while it still needed ${answer.needed.join(", ")}.`, answer.needed[0]);
+      }
+      return answer;
     } catch (e) {
       return problem(e instanceof Error ? e.message : String(e));
     }
