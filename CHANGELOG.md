@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - **XQuery suggestions**: the engine's built-in functions (with `map:`,
   `array:` and the other prefixes), keywords, the functions and global
