@@ -80,6 +80,19 @@ Documentation comes from the schema texts themselves: RELAX NG's
 `a:documentation`, as the TEI schemas carry, and XSD's
 `xs:documentation` (`extension/src/docs.ts`).
 
+A document that names no schema, or whose schema can't be read, gets
+an outline made from the names it already uses
+(`extension/src/document-outline.ts`): the elements seen under each
+element, the attributes seen on it and their values. It has the same
+shape, so the same suggestions read it; hovers and quick fixes use only
+a schema's outline.
+
+In XQuery files (`extension/src/xquery-complete.ts`), the built-in
+functions come from the engine's own table (the core's
+`builtinFunctions`), and the module's declarations and the variables in
+scope from the same reading as code navigation (`xquery-symbols.ts`),
+with the modules it imports.
+
 Quick fixes (`extension/src/fixes.ts`) come from the same outline, at
 the element or attribute the problem is placed on: its required
 attributes against those in the tag, the children its parent allows,
@@ -150,6 +163,10 @@ asks the server (`urdr/elementsAt`) what the schema allows at the
 selection, and which of those may also hold what is selected: its
 top-level elements must be children the outline allows, and its text
 allowed (order and counts are not checked).
+
+Tags close as they are typed (`extension/src/closing.ts`), in the
+client: on a `>` that ends a start tag, or a `/` after `<`, it adds the
+end tag or the open element's name.
 
 Format and Indent is the LSP formatting request, answered by the server
 (`extension/src/format.ts`) from a strict scan of the text, which gives

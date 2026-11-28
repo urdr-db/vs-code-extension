@@ -72,6 +72,19 @@ closing tag. Hovering over an element or attribute shows the schema's
 documentation for it, such as the TEI Guidelines' description, along
 with its attributes and what it may contain.
 
+A document that names no schema gets suggestions too, from the names it
+already uses: the elements seen under an element of the same name, the
+attributes seen on it and the values they took.
+
+Tags close as you type: `>` at the end of a start tag adds its end tag
+after the cursor, and `</` adds the name of the element still open.
+Turn off `urdr.autoCloseTags` if another XML extension does this too.
+
+In XQuery files, the engine's built-in functions (with `map:`, `array:`
+and the other prefixes), keywords, the functions and global variables of
+the module and the library modules it imports, and the variables in
+scope after `$` are suggested.
+
 ## Evaluate XPath
 
 **Evaluate XPath…** runs an XPath 3.1 expression on the open document,
@@ -98,7 +111,8 @@ In TEI documents, an `xml:id` and the `#id` pointers to it (in `ref`,
 ## Editing elements
 
 These actions work as in Oxygen XML Editor, with Oxygen's keys in XML
-and XSLT files. Each is also in the Command Palette under **Urðr-XML**.
+and XSLT files (the keymap preset, below). Each is also in the Command
+Palette under **Urðr-XML**.
 
 | Action | Windows, Linux | macOS |
 |---|---|---|
@@ -113,10 +127,21 @@ and XSLT files. Each is also in the Command Palette under **Urðr-XML**.
 | **Go to Matching Tag**: from a start tag to its end tag and back | | |
 
 In XML files these keys replace VS Code's own: `Ctrl+E` (Quick Open),
-`Ctrl+/` (comment lines; `Ctrl+K Ctrl+C` still comments) and
-`Ctrl+Shift+P` (the Command Palette; `F1` still opens it). To keep
-VS Code's keys, turn off `urdr.oxygenShortcuts`; the actions stay in the
-Command Palette.
+`Ctrl+/` (comment lines; Oxygen's `Ctrl+Shift+,` and `Ctrl+K Ctrl+C`
+still comment) and `Ctrl+Shift+P` (the Command Palette; `F1` still opens
+it).
+
+`urdr.keymap` chooses whose keys these are, as Urðr Studio's keymap
+presets do:
+
+- **Oxygen** (the default): the keys above, and `Ctrl+Shift+,` to
+  comment. Oxygen's keys for moving and copying lines are left to
+  VS Code, which uses them for several cursors.
+- **XMLSpy**: `F7` and `F8`, where XMLSpy checks and validates, open the
+  Problems list (checking itself runs as you type), and `F10` runs
+  **Transform with XSLT…**.
+- **VS Code**: the extension adds no keys; the actions stay in the
+  Command Palette.
 
 **Format and Indent** puts each element that holds only elements on
 lines of its own, indented with the editor's tab settings. An element
@@ -217,7 +242,8 @@ output. `xsl:message` output goes to the **Urðr-XML: XSLT** output panel.
 | `urdr.checkDelay` | `400` | Milliseconds to wait after typing stops before checking. |
 | `urdr.transforms` | `[]` | Saved XSLT transforms (see above). |
 | `urdr.transform.timeout` | `60` | Seconds a transformation may run before it is stopped. |
-| `urdr.oxygenShortcuts` | `true` | Oxygen's keys for the element actions. |
+| `urdr.keymap` | `oxygen` | Whose keys the element actions take: `oxygen`, `xmlspy` or `vscode`. |
+| `urdr.autoCloseTags` | `true` | Close tags as they are typed. |
 | `urdr.odd.source` | | The `p5subset.xml` that ODDs compile against. Empty uses the bundled TEI P5 4.12.0. |
 
 ## Limitations
